@@ -4,6 +4,7 @@ public class AnimeThemesVideo {
 
     private long id;
     private String link;
+    private String tags;
     private AnimeThemesAudio audio;
 
     public long getId() {
@@ -22,6 +23,14 @@ public class AnimeThemesVideo {
         this.link = link;
     }
 
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
     public AnimeThemesAudio getAudio() {
         return audio;
     }
@@ -35,6 +44,7 @@ public class AnimeThemesVideo {
         return "AnimeThemesVideo{" +
                 "id=" + id +
                 ", link='" + link + '\'' +
+                ", tags='" + tags + '\'' +
                 ", audio=" + audio +
                 '}';
     }

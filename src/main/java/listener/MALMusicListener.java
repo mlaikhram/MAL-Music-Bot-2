@@ -1,18 +1,18 @@
 package listener;
 
+import audio.SessionManager;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import java.util.Objects;
 
 public class MALMusicListener extends ListenerAdapter {
 
-
+    private SessionManager sessionManager;
 
     public MALMusicListener() {
-
+        this.sessionManager = new SessionManager();
     }
 
     @Override
@@ -33,6 +33,7 @@ public class MALMusicListener extends ListenerAdapter {
     }
 
     private void addUser(SlashCommandInteractionEvent event) {
+        sessionManager.getInstance().getSession(event.getGuild()).addUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString));
         event.reply("I'm alive? I can't add " + event.getOption(Constants.options.USERNAME, OptionMapping::getAsString) + " right now, but I will some day soon!").queue();
     }
 

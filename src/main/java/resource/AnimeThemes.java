@@ -9,20 +9,21 @@ import util.ConfigHandler;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AnimeThemes {
 
     private static final Logger logger = LoggerFactory.getLogger(MAL.class);
 
-    private static final String LIST_ENDPOINT = "/anime?page[size]={pageLimit}&page[number]={pageNum}&filter[has]=resources&filter[site]=MyAnimeList&filter[external_id]={malIds}&include=animethemes.animethemeentries.videos.audio,images,resources";
+    private static final String LIST_ENDPOINT = "/anime?page[size]={pageLimit}&page[number]={pageNum}&filter[has]=resources&filter[site]=MyAnimeList&filter[external_id]={malIds}&include=animethemes.song,animethemes.song.artists,animethemes.animethemeentries.videos.audio,images,resources";
 
-    public static ResponseEntity<AnimeThemesResponse> getList(List<String> malIds, int pageNum) {
+    public static ResponseEntity<AnimeThemesResponse> getList(List<Long> malIds, int pageNum) {
 
         ResponseEntity<AnimeThemesResponse> response = new RestTemplate().getForEntity(ConfigHandler.config().getAnimethemes().getUrl() + LIST_ENDPOINT, AnimeThemesResponse.class,
                 Map.of(
                         "pageLimit", ConfigHandler.config().getAnimethemes().getPageLimit(),
                         "pageNum", pageNum,
-                        "malIds", String.join(",", malIds)
+                        "malIds", String.join(",", malIds.stream().map(Object::toString).collect(Collectors.toUnmodifiableList()))
                 )
         );
 
@@ -31,7 +32,7 @@ public class AnimeThemes {
         return response;
     }
 
-    public static ResponseEntity<AnimeThemesResponse> getList(List<String> malIds) {
+    public static ResponseEntity<AnimeThemesResponse> getList(List<Long> malIds) {
         return getList(malIds, 1);
     }
 }

@@ -16,11 +16,11 @@ public class IwaUser {
         return name;
     }
 
-    public void AddMalIds(String status, Long ... malIds) {
+    public void addMalIds(String status, Long ... malIds) {
         malIdMap.computeIfAbsent(status, (s) -> new HashSet<>()).addAll(Arrays.asList(malIds));
     }
 
-    public Map<String, Set<Long>> getMalIds() {
-        return malIdMap;
+    public Set<Long> getMalIds(String status) {
+        return malIdMap.get(status);
     }
 }

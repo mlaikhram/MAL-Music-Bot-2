@@ -5,7 +5,7 @@ import java.util.List;
 public class AnimeThemesAnimeEntry {
 
     private long id;
-    private String name;
+    private String slug;
     private List<AnimeThemes> animethemes;
     private List<AnimeThemesImages> images;
     private List<AnimeThemesResources> resources;
@@ -18,12 +18,12 @@ public class AnimeThemesAnimeEntry {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getSlug() {
+        return slug;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSlug(String slug) {
+        this.slug = slug;
     }
 
     public List<AnimeThemes> getAnimethemes() {
@@ -54,7 +54,7 @@ public class AnimeThemesAnimeEntry {
     public String toString() {
         return "AnimeThemesAnimeEntry{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", slug='" + slug + '\'' +
                 ", animethemes=" + animethemes +
                 ", images=" + images +
                 ", resources=" + resources +

@@ -1,0 +1,11 @@
+discord:
+  token: discord-bot-token-goes-here
+
+mal:
+  url: https://api.myanimelist.net/v2
+  clientId: myanimelist-client-id-goes-here
+  pageLimit: 1000
+
+animethemes:
+  url: https://api.animethemes.moe
+  pageLimit: 100
