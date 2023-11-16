@@ -1,11 +1,8 @@
 package model.mal;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAlias;
 
-import java.util.List;
-
-public class AnimeEntry {
+public class MALAnimeEntry {
 
     private long id;
     private String title;

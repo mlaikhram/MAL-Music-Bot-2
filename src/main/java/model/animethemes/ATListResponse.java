@@ -2,24 +2,24 @@ package model.animethemes;
 
 import java.util.List;
 
-public class AnimeThemesResponse {
+public class ATListResponse {
 
-    private List<AnimeThemesAnimeEntry> anime;
-    private AnimeThemesLinks links;
+    private List<ATAnime> anime;
+    private ATLinks links;
 
-    public List<AnimeThemesAnimeEntry> getAnime() {
+    public List<ATAnime> getAnime() {
         return anime;
     }
 
-    public void setAnime(List<AnimeThemesAnimeEntry> anime) {
+    public void setAnime(List<ATAnime> anime) {
         this.anime = anime;
     }
 
-    public AnimeThemesLinks getLinks() {
+    public ATLinks getLinks() {
         return links;
     }
 
-    public void setLinks(AnimeThemesLinks links) {
+    public void setLinks(ATLinks links) {
         this.links = links;
     }
 

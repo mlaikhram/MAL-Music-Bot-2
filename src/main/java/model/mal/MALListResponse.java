@@ -2,7 +2,7 @@ package model.mal;
 
 import java.util.List;
 
-public class AnimeListResponse {
+public class MALListResponse {
 
     private List<MALNode> data;
     private Paging paging;

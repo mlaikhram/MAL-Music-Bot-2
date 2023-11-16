@@ -1,6 +1,6 @@
 package model.animethemes;
 
-public class AnimeThemesSongArtist {
+public class ATArtist {
 
     private long id;
     private String name;

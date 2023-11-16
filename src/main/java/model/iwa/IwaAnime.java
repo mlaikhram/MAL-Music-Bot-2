@@ -1,6 +1,6 @@
 package model.iwa;
 
-import model.mal.AnimeEntry;
+import model.mal.MALAnimeEntry;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,7 +14,7 @@ public class IwaAnime {
     private String pictureUrl;
     private Set<Long> themeSet;
 
-    public IwaAnime(AnimeEntry animeEntry) {
+    public IwaAnime(MALAnimeEntry animeEntry) {
         this.malId = animeEntry.getId();
         this.names = new LinkedHashSet<>();
         this.pictureUrl = animeEntry.getPicture().getMedium();
@@ -36,6 +36,10 @@ public class IwaAnime {
 
     public long getMalId() {
         return malId;
+    }
+
+    public String getName() {
+        return names.iterator().next();
     }
 
     public Set<Long> getThemeSet() {

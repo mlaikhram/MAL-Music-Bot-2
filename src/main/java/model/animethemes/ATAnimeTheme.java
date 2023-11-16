@@ -2,12 +2,12 @@ package model.animethemes;
 
 import java.util.List;
 
-public class AnimeThemes {
+public class ATAnimeTheme {
 
     private long id;
     private String slug;
-    private AnimeThemesSong song;
-    private List<AnimeThemesEntry> animethemeentries;
+    private ATSong song;
+    private List<ATAnimeThemeEntry> animethemeentries;
 
     public long getId() {
         return id;
@@ -25,19 +25,19 @@ public class AnimeThemes {
         this.slug = slug;
     }
 
-    public AnimeThemesSong getSong() {
+    public ATSong getSong() {
         return song;
     }
 
-    public void setSong(AnimeThemesSong song) {
+    public void setSong(ATSong song) {
         this.song = song;
     }
 
-    public List<AnimeThemesEntry> getAnimethemeentries() {
+    public List<ATAnimeThemeEntry> getAnimethemeentries() {
         return animethemeentries;
     }
 
-    public void setAnimethemeentries(List<AnimeThemesEntry> animethemeentries) {
+    public void setAnimethemeentries(List<ATAnimeThemeEntry> animethemeentries) {
         this.animethemeentries = animethemeentries;
     }
 

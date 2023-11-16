@@ -9,14 +9,9 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class MALMusicListener extends ListenerAdapter {
 
-    private SessionManager sessionManager;
-
-    public MALMusicListener() {
-        this.sessionManager = new SessionManager();
-    }
-
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
         switch (event.getName()) {
             case Constants.commands.ADD_USER:
                 addUser(event);
@@ -33,12 +28,13 @@ public class MALMusicListener extends ListenerAdapter {
     }
 
     private void addUser(SlashCommandInteractionEvent event) {
-        sessionManager.getInstance().getSession(event.getGuild()).addUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString));
-        event.reply("I'm alive? I can't add " + event.getOption(Constants.options.USERNAME, OptionMapping::getAsString) + " right now, but I will some day soon!").queue();
+        SessionManager.getInstance().getSession(event.getGuild()).addUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString));
+        event.getHook().sendMessage("I'm alive? I can't add " + event.getOption(Constants.options.USERNAME, OptionMapping::getAsString) + " right now, but I will some day soon!").queue();
     }
 
     private void removeUser(SlashCommandInteractionEvent event) {
-        event.reply("I'm alive? I can't remove " + event.getOption(Constants.options.USERNAME, OptionMapping::getAsString) + " right now, but I will some day soon!").queue();
+        SessionManager.getInstance().getSession(event.getGuild()).removeUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString));
+        event.getHook().sendMessage("I'm alive? I can't remove " + event.getOption(Constants.options.USERNAME, OptionMapping::getAsString) + " right now, but I will some day soon!").queue();
     }
 
     private void listUsers(SlashCommandInteractionEvent event) {

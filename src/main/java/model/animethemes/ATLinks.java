@@ -1,6 +1,6 @@
 package model.animethemes;
 
-public class AnimeThemesLinks {
+public class ATLinks {
 
     private String next;
 

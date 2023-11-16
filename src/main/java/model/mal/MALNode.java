@@ -2,13 +2,13 @@ package model.mal;
 
 public class MALNode {
 
-    private AnimeEntry node;
+    private MALAnimeEntry node;
 
-    public AnimeEntry getNode() {
+    public MALAnimeEntry getNode() {
         return node;
     }
 
-    public void setNode(AnimeEntry node) {
+    public void setNode(MALAnimeEntry node) {
         this.node = node;
     }
 

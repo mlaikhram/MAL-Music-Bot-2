@@ -2,7 +2,7 @@ package model.animethemes;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 
-public class AnimeThemesResources {
+public class ATResource {
 
     @JsonAlias("external_id")
     private long malId;

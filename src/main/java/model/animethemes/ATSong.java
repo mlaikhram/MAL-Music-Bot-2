@@ -2,11 +2,11 @@ package model.animethemes;
 
 import java.util.List;
 
-public class AnimeThemesSong {
+public class ATSong {
 
     private long id;
     private String title;
-    private List<AnimeThemesSongArtist> artists;
+    private List<ATArtist> artists;
 
     public long getId() {
         return id;
@@ -24,11 +24,11 @@ public class AnimeThemesSong {
         this.title = title;
     }
 
-    public List<AnimeThemesSongArtist> getArtists() {
+    public List<ATArtist> getArtists() {
         return artists;
     }
 
-    public void setArtists(List<AnimeThemesSongArtist> artists) {
+    public void setArtists(List<ATArtist> artists) {
         this.artists = artists;
     }
 

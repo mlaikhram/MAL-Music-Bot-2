@@ -1,11 +1,11 @@
 package model.animethemes;
 
-public class AnimeThemesVideo {
+public class ATVideo {
 
     private long id;
     private String link;
     private String tags;
-    private AnimeThemesAudio audio;
+    private ATAudio audio;
 
     public long getId() {
         return id;
@@ -31,11 +31,11 @@ public class AnimeThemesVideo {
         this.tags = tags;
     }
 
-    public AnimeThemesAudio getAudio() {
+    public ATAudio getAudio() {
         return audio;
     }
 
-    public void setAudio(AnimeThemesAudio audio) {
+    public void setAudio(ATAudio audio) {
         this.audio = audio;
     }
 

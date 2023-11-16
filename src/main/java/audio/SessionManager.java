@@ -13,7 +13,7 @@ public class SessionManager {
     private final Map<Long, GuildSession> sessions;
     private final AudioPlayerManager audioPlayerManager;
 
-    public SessionManager() {
+    private SessionManager() {
         this.sessions = new HashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
     }
@@ -74,7 +74,7 @@ public class SessionManager {
     }*/
 
 
-    public SessionManager getInstance() {
+    public static SessionManager getInstance() {
         if (instance == null) {
             instance = new SessionManager();
         }

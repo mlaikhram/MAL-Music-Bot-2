@@ -2,13 +2,14 @@ package model.animethemes;
 
 import java.util.List;
 
-public class AnimeThemesAnimeEntry {
+public class ATAnime {
 
     private long id;
+    private String name;
     private String slug;
-    private List<AnimeThemes> animethemes;
-    private List<AnimeThemesImages> images;
-    private List<AnimeThemesResources> resources;
+    private List<ATAnimeTheme> animethemes;
+    private List<ATImage> images;
+    private List<ATResource> resources;
 
     public long getId() {
         return id;
@@ -16,6 +17,14 @@ public class AnimeThemesAnimeEntry {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getSlug() {
@@ -26,34 +35,35 @@ public class AnimeThemesAnimeEntry {
         this.slug = slug;
     }
 
-    public List<AnimeThemes> getAnimethemes() {
+    public List<ATAnimeTheme> getAnimethemes() {
         return animethemes;
     }
 
-    public void setAnimethemes(List<AnimeThemes> animethemes) {
+    public void setAnimethemes(List<ATAnimeTheme> animethemes) {
         this.animethemes = animethemes;
     }
 
-    public List<AnimeThemesImages> getImages() {
+    public List<ATImage> getImages() {
         return images;
     }
 
-    public void setImages(List<AnimeThemesImages> images) {
+    public void setImages(List<ATImage> images) {
         this.images = images;
     }
 
-    public List<AnimeThemesResources> getResources() {
+    public List<ATResource> getResources() {
         return resources;
     }
 
-    public void setResources(List<AnimeThemesResources> resources) {
+    public void setResources(List<ATResource> resources) {
         this.resources = resources;
     }
 
     @Override
     public String toString() {
-        return "AnimeThemesAnimeEntry{" +
+        return "ATAnime{" +
                 "id=" + id +
+                ", name='" + name + '\'' +
                 ", slug='" + slug + '\'' +
                 ", animethemes=" + animethemes +
                 ", images=" + images +

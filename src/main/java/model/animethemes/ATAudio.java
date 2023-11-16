@@ -1,6 +1,6 @@
 package model.animethemes;
 
-public class AnimeThemesAudio {
+public class ATAudio {
 
     private long id;
     private String link;

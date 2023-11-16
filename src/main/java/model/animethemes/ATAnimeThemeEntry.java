@@ -2,11 +2,11 @@ package model.animethemes;
 
 import java.util.List;
 
-public class AnimeThemesEntry {
+public class ATAnimeThemeEntry {
 
     private long id;
     private boolean spoiler;
-    private List<AnimeThemesVideo> videos;
+    private List<ATVideo> videos;
 
     public long getId() {
         return id;
@@ -24,11 +24,11 @@ public class AnimeThemesEntry {
         this.spoiler = spoiler;
     }
 
-    public List<AnimeThemesVideo> getVideos() {
+    public List<ATVideo> getVideos() {
         return videos;
     }
 
-    public void setVideos(List<AnimeThemesVideo> videos) {
+    public void setVideos(List<ATVideo> videos) {
         this.videos = videos;
     }
 

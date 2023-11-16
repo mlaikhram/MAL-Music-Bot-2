@@ -1,6 +1,6 @@
 package model.animethemes;
 
-public class AnimeThemesImages {
+public class ATImage {
 
     private long id;
     private String facet;
