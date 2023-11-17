@@ -5,14 +5,11 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import resource.AnimeThemes;
-import resource.MAL;
 import util.ConfigHandler;
 import util.Constants;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
 public class Main {
 

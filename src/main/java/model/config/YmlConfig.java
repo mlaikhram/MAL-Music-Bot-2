@@ -13,6 +13,9 @@ public class YmlConfig {
     @JsonProperty
     private AnimeThemesConfig animethemes;
 
+    @JsonProperty
+    private JikanConfig jikan;
+
     public DiscordConfig getDiscord() {
         return discord;
     }
@@ -23,5 +26,9 @@ public class YmlConfig {
 
     public AnimeThemesConfig getAnimethemes() {
         return animethemes;
+    }
+
+    public JikanConfig getJikan() {
+        return jikan;
     }
 }

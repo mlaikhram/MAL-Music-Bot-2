@@ -9,3 +9,6 @@ mal:
 animethemes:
   url: https://api.animethemes.moe
   pageLimit: 100
+
+jikan:
+  url: https://api.jikan.moe/v4

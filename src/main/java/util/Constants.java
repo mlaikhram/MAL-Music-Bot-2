@@ -15,6 +15,16 @@ public class Constants {
         public static final String USERNAME = "username";
     }
 
+    public static class myanimelist {
+        public static final String USERNAME = "{username}";
+        public static final String PROFILE_URL_TEMPLATE = "https://myanimelist.net/profile/" + USERNAME;
+
+        public enum status {
+            watching,
+            completed
+        }
+    }
+
     public static class animethemes {
         public static final String ANIME_SLUG = "{animeSlug}";
         public static final String ANIMETHEME_SLUG = "{animethemeSlug}";

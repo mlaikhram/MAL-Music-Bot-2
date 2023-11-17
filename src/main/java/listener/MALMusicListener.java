@@ -28,16 +28,14 @@ public class MALMusicListener extends ListenerAdapter {
     }
 
     private void addUser(SlashCommandInteractionEvent event) {
-        SessionManager.getInstance().getSession(event.getGuild()).addUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString));
-        event.getHook().sendMessage("I'm alive? I can't add " + event.getOption(Constants.options.USERNAME, OptionMapping::getAsString) + " right now, but I will some day soon!").queue();
+        SessionManager.getInstance().getSession(event.getGuild()).addUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString), event.getHook());
     }
 
     private void removeUser(SlashCommandInteractionEvent event) {
-        SessionManager.getInstance().getSession(event.getGuild()).removeUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString));
-        event.getHook().sendMessage("I'm alive? I can't remove " + event.getOption(Constants.options.USERNAME, OptionMapping::getAsString) + " right now, but I will some day soon!").queue();
+        SessionManager.getInstance().getSession(event.getGuild()).removeUser(event.getOption(Constants.options.USERNAME, OptionMapping::getAsString), event.getHook());
     }
 
     private void listUsers(SlashCommandInteractionEvent event) {
-        event.reply("I'm alive? I can't list users right now, but I will some day soon!").queue();
+        SessionManager.getInstance().getSession(event.getGuild()).listUsers(event.getHook());
     }
 }

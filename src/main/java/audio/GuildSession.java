@@ -6,16 +6,23 @@ import model.animethemes.*;
 import model.iwa.IwaAnime;
 import model.iwa.IwaTheme;
 import model.iwa.IwaUser;
+import model.jikan.JikanAnimeStats;
+import model.jikan.JikanProfile;
 import model.mal.MALListResponse;
 import model.mal.MALNode;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import resource.AnimeThemes;
+import resource.Jikan;
 import resource.MAL;
 import util.ConfigHandler;
 import util.Constants;
+import util.Embeds;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,7 +37,6 @@ public class GuildSession {
     private final Map<Long, IwaTheme> themeBank;
     private final LinkedHashSet<String> recentSongs;
     private ATAudio currentSong;
-    private String lastCommand;
 
     public final TrackScheduler scheduler;
     private final AudioSendHandler audioSendHandler;
@@ -50,18 +56,30 @@ public class GuildSession {
         guild.getAudioManager().setSendingHandler(this.audioSendHandler);
     }
 
-    public void addUser(String username) {
+    public void listUsers(InteractionHook hook) {
+        List<String> userlist = users.values().stream().map(IwaUser::getUsername).collect(Collectors.toList());
+        userlist.add("\n*" + users.size() + " total*");
+        hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.List("Users", userlist)).build()).queue();
+    }
+
+    public void addUser(String username, InteractionHook hook) {
         try {
             if (users.containsKey(username.toLowerCase())) {
-                throw new Exception(username + " is already added!");
+                throw new Exception("This user is already added!");
             } else {
-                IwaUser user = new IwaUser(username);
-                List<Long> newAnime = populateUser(user, "completed");
-                newAnime.addAll(populateUser(user, "watching"));
-                logger.info(user.getName() + " | Total completed: " + user.getMalIds("completed").size() + " | Total watching: " + user.getMalIds("watching").size());
+                hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.PendingEmbed(username, "Searching for this user...")).build()).queue();
+                JikanProfile userProfile = Jikan.getProfile(username).getBody().getProfile();
 
-                // TODO: update message with final counts and processing new anime message (x/y)...
-                populateAnimeThemes(newAnime);
+                IwaUser user = new IwaUser(userProfile);
+
+                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, "Populating anime list...", userProfile.getStatistics().getAnime())).build()).queue();
+
+                List<Long> newAnime = populateUser(user, Constants.myanimelist.status.completed.toString(), userProfile.getStatistics().getAnime(), hook);
+                newAnime.addAll(populateUser(user, Constants.myanimelist.status.watching.toString(), userProfile.getStatistics().getAnime(), hook));
+                logger.info(user.getUsername() + " | Total completed: " + user.getMalIds("completed").size() + " | Total watching: " + user.getMalIds("watching").size());
+
+                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, String.format("Gathering songs for new anime entries (%s/%s)...", 0, newAnime.size()))).build()).queue();
+                populateAnimeThemes(user, newAnime, hook);
 
                 Set<Long> emptyAnime = new HashSet<>();
                 for (IwaAnime anime : animeBank.values()) {
@@ -71,38 +89,35 @@ public class GuildSession {
                     }
                 }
                 logger.info("total anime without songs: " + emptyAnime.size());
-                for (long malId : emptyAnime) {
-                    animeBank.remove(malId);
-                }
 
-                users.put(user.getName(), user);
-                // TODO: send successful add message with stats
+                users.put(user.getUsername().toLowerCase(), user);
+                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddComplete(user)).build()).queue();
             }
         }
         catch (Exception e) {
-            // TODO: return error message in chat + log
             logger.error(e.getMessage());
             e.printStackTrace();
+            hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed(username, e.getMessage())).build()).queue();
         }
     }
 
-    public void removeUser(String username) {
+    public void removeUser(String username, InteractionHook hook) {
         if (users.containsKey(username.toLowerCase())) {
             users.remove(username.toLowerCase());
-            // TODO: message removed user
+            hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.CompleteEmbed(username, "This user has been removed")).build()).queue();
         }
         else {
-            // TODO: message user is not in list
+            hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed(username, "This user is not added!")).build()).queue();
         }
     }
 
     // returns a list of malIds that are not yet populated in the animeBank with theme songs
-    private List<Long> populateUser(IwaUser user, String status) {
+    private List<Long> populateUser(IwaUser user, String status, JikanAnimeStats expectedStats, InteractionHook hook) {
         int offset = 0;
         List<Long> newAnime = new ArrayList<>();
         MALListResponse paginatedResponse;
         do {
-            paginatedResponse = MAL.getList(user.getName(), status, offset).getBody();
+            paginatedResponse = MAL.getList(user.getUsername(), status, offset).getBody();
             for (MALNode node : paginatedResponse.getData()) {
                 if (!animeBank.containsKey(node.getNode().getId())) {
                     animeBank.put(node.getNode().getId(), new IwaAnime(node.getNode()));
@@ -110,18 +125,20 @@ public class GuildSession {
                 }
                 user.addMalIds(status, node.getNode().getId());
             }
-            // TODO: update message with new count of loaded entries
+            hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, "Populating anime list...", expectedStats)).build()).queue();
             offset += ConfigHandler.config().getMal().getPageLimit();
         } while (paginatedResponse.getPaging().getNext() != null);
         return newAnime;
     }
 
-    private void populateAnimeThemes(List<Long> newAnime) {
+    private void populateAnimeThemes(IwaUser user, List<Long> newAnime, InteractionHook hook) {
         int page = 0;
         ATListResponse paginatedResponse;
         while (page * ConfigHandler.config().getAnimethemes().getPageLimit() < newAnime.size()) {
             ++page;
-            paginatedResponse = AnimeThemes.getList(newAnime.subList((page - 1) * ConfigHandler.config().getAnimethemes().getPageLimit(), Math.min(page * ConfigHandler.config().getAnimethemes().getPageLimit(), newAnime.size())), 1).getBody();
+            int fromIndex = (page - 1) * ConfigHandler.config().getAnimethemes().getPageLimit();
+            int toIndex = Math.min(page * ConfigHandler.config().getAnimethemes().getPageLimit(), newAnime.size());
+            paginatedResponse = AnimeThemes.getList(newAnime.subList(fromIndex, toIndex), 1).getBody();
             for (ATAnime anime : paginatedResponse.getAnime()) {
                 long malId = anime.getResources().get(0).getMalId();
 
@@ -151,7 +168,7 @@ public class GuildSession {
                     }
                 }
             }
-            // TODO: update message with new count of processed anime entries (themes loaded)
+            hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, String.format("Gathering songs for new anime entries (%s/%s)...", toIndex , newAnime.size()))).build()).queue();
         }
     }
 }
