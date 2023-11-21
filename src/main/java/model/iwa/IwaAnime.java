@@ -1,11 +1,10 @@
 package model.iwa;
 
 import model.mal.MALAnimeEntry;
+import util.Constants;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class IwaAnime {
 
@@ -40,6 +39,18 @@ public class IwaAnime {
 
     public String getName() {
         return names.iterator().next();
+    }
+
+    public List<String> getAltNames() {
+        return names.stream().skip(1).collect(Collectors.toList());
+    }
+
+    public String getUrl() {
+        return Constants.myanimelist.ANIME_URL_TEMPLATE.replace(Constants.myanimelist.MAL_ID, malId + "");
+    }
+
+    public String getPictureUrl() {
+        return pictureUrl;
     }
 
     public Set<Long> getThemeSet() {

@@ -13,9 +13,13 @@ public class TrackScheduler extends AudioEventAdapter {
     private final AudioPlayer player;
     private final BlockingQueue<AudioTrack> queue;
 
-    public TrackScheduler(AudioPlayer player) {
+    private final GuildSession session;
+
+    public TrackScheduler(AudioPlayer player, GuildSession session) {
         this.player = player;
         this.queue = new LinkedBlockingQueue<>();
+
+        this.session = session;
     }
 
     public void queue(AudioTrack track) {
@@ -35,6 +39,6 @@ public class TrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        // TODO: callback from message .songEnded(guildId, endReason);
+        session.songEnded(endReason);
     }
 }

@@ -43,4 +43,16 @@ public class IwaTheme {
     public long getMalId() {
         return malId;
     }
+
+    @Override
+    public String toString() {
+        return "IwaTheme{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", artists=" + artists +
+                ", audioUri='" + audioUri + '\'' +
+                ", videoUrl='" + videoUrl + '\'' +
+                ", malId=" + malId +
+                '}';
+    }
 }

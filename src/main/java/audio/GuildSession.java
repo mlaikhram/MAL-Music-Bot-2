@@ -1,7 +1,14 @@
 package audio;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import model.animethemes.*;
 import model.iwa.IwaAnime;
 import model.iwa.IwaTheme;
@@ -12,7 +19,10 @@ import model.mal.MALListResponse;
 import model.mal.MALNode;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import org.slf4j.Logger;
@@ -31,40 +41,115 @@ public class GuildSession {
 
     private static final Logger logger = LoggerFactory.getLogger(GuildSession.class);
 
-
-    private final Map<String, IwaUser> users;
-    private final Map<Long, IwaAnime> animeBank;
-    private final Map<Long, IwaTheme> themeBank;
-    private final LinkedHashSet<String> recentSongs;
-    private ATAudio currentSong;
-
+    private final AudioPlayerManager audioPlayerManager;
     public final TrackScheduler scheduler;
     private final AudioSendHandler audioSendHandler;
 
+    private IwaJukebox jukebox;
 
-    public GuildSession(Guild guild, AudioPlayerManager audioPlayerManager) {
-        this.users = new TreeMap<>();
-        this.animeBank = new HashMap<>();
-        this.themeBank = new HashMap<>();
-        this.recentSongs = new LinkedHashSet<>();
+    private InteractionHook currentSongHook;
 
+    public GuildSession(Guild guild) {
+        this.audioPlayerManager = new DefaultAudioPlayerManager();
+        AudioSourceManagers.registerRemoteSources(this.audioPlayerManager);
         AudioPlayer audioPlayer = audioPlayerManager.createPlayer();
-        this.scheduler = new TrackScheduler(audioPlayer);
+        this.scheduler = new TrackScheduler(audioPlayer, this);
         audioPlayer.addListener(this.scheduler);
         this.audioSendHandler = new AudioPlayerSendHandler(audioPlayer);
-
         guild.getAudioManager().setSendingHandler(this.audioSendHandler);
+
+        this.jukebox = new IwaJukebox();
+    }
+
+    public void playTheme(AudioManager audioManager, Member commander, InteractionHook hook) {
+        logger.info("attempting to play a song");
+        try {
+            if (!commander.getVoiceState().inAudioChannel()) {
+                throw new Exception("You must be in a voice channel to hear my song!");
+            }
+            logger.info("user is in a voice channel");
+            if (commander.getGuild().getIdLong() != audioManager.getGuild().getIdLong()) {
+                logger.error(String.format("user guild: %s, my guild: %s", commander.getGuild().getId(), audioManager.getGuild().getId()));
+                throw new Exception("You must join a voice channel on this server!");
+            }
+            logger.info("user is in a voice channel on the server");
+            VoiceChannel currentChannel = commander.getVoiceState().getChannel().asVoiceChannel();
+            if (!audioManager.isConnected()) {
+                logger.info("opening audio connection to current channel");
+                audioManager.openAudioConnection(currentChannel);
+            } else if (audioManager.getConnectedChannel().getIdLong() != currentChannel.getIdLong()) {
+                throw new Exception("You are in the wrong voice channel!");
+            }
+            hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.PendingEmbed("Finding a Song", "Thinking...")).build()).queue();
+            startAudioPlayer(hook);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Cannot play song", e.getMessage())).build()).queue();
+        }
+
+    }
+
+    public void startAudioPlayer(InteractionHook hook) throws Exception {
+        IwaTheme theme = jukebox.getTheme();
+
+        this.audioPlayerManager.loadItem(theme.getAudioUri(), new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                scheduler.queue(track);
+                logger.info("now playing: " + theme.getAudioUri());
+                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.CompleteEmbed("Guess the Song", "What could it be?")).build()).queue();
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                //
+            }
+
+            @Override
+            public void noMatches() {
+                logger.error("Song uri did not match: " + theme.toString());
+                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I couldn't find the song for %s", theme.getVideoUrl()))).build()).queue();
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                exception.printStackTrace();
+                logger.error("Song failed to load: " + theme.toString());
+                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I tried to play %s but it wouldn't load!", theme.getVideoUrl()))).build()).queue();
+                if (exception.severity == FriendlyException.Severity.COMMON) {
+
+                } else {
+                    hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I tried to play %s, but it wouldn't load!", theme.getVideoUrl()))).build()).queue();
+                }
+            }
+        });
+        currentSongHook = hook;
+    }
+
+    public void songEnded(AudioTrackEndReason endReason) {
+        // TODO: that song was : format jukebox.getLastTheme()
+        logger.info("ended because " + endReason);
+        logger.info("this song was " + jukebox.getLastTheme());
+        IwaTheme theme = jukebox.getLastTheme();
+        List<IwaUser> users = jukebox.getUsers().stream().filter(user ->
+                user.getMalIds(Constants.myanimelist.status.completed.toString()).contains(theme.getMalId()) ||
+                user.getMalIds(Constants.myanimelist.status.watching.toString()).contains(theme.getMalId()))
+                .collect(Collectors.toList());
+
+        currentSongHook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.IwaTheme(theme, jukebox.getAnimeBank().get(theme.getMalId()), users)).build()).queue();
+        currentSongHook = null;
     }
 
     public void listUsers(InteractionHook hook) {
-        List<String> userlist = users.values().stream().map(IwaUser::getUsername).collect(Collectors.toList());
-        userlist.add("\n*" + users.size() + " total*");
-        hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.List("Users", userlist)).build()).queue();
+        List<String> userList = jukebox.getUsers().stream().map(IwaUser::getUsername).collect(Collectors.toList());
+        userList.add("\n*" + jukebox.getUsers().size() + " total*");
+        hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.List("Users", userList)).build()).queue();
     }
 
     public void addUser(String username, InteractionHook hook) {
         try {
-            if (users.containsKey(username.toLowerCase())) {
+            if (jukebox.containsUser(username)) {
                 throw new Exception("This user is already added!");
             } else {
                 hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.PendingEmbed(username, "Searching for this user...")).build()).queue();
@@ -82,7 +167,7 @@ public class GuildSession {
                 populateAnimeThemes(user, newAnime, hook);
 
                 Set<Long> emptyAnime = new HashSet<>();
-                for (IwaAnime anime : animeBank.values()) {
+                for (IwaAnime anime : jukebox.getAnimeBank().values()) {
                     if (anime.getThemeSet().isEmpty()) {
                         logger.warn(anime.getName() + " does not have any themes");
                         emptyAnime.add(anime.getMalId());
@@ -90,7 +175,7 @@ public class GuildSession {
                 }
                 logger.info("total anime without songs: " + emptyAnime.size());
 
-                users.put(user.getUsername().toLowerCase(), user);
+                jukebox.addUser(user);
                 hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddComplete(user)).build()).queue();
             }
         }
@@ -102,8 +187,8 @@ public class GuildSession {
     }
 
     public void removeUser(String username, InteractionHook hook) {
-        if (users.containsKey(username.toLowerCase())) {
-            users.remove(username.toLowerCase());
+        if (jukebox.containsUser(username)) {
+            jukebox.removeUser(username.toLowerCase());
             hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.CompleteEmbed(username, "This user has been removed")).build()).queue();
         }
         else {
@@ -119,8 +204,8 @@ public class GuildSession {
         do {
             paginatedResponse = MAL.getList(user.getUsername(), status, offset).getBody();
             for (MALNode node : paginatedResponse.getData()) {
-                if (!animeBank.containsKey(node.getNode().getId())) {
-                    animeBank.put(node.getNode().getId(), new IwaAnime(node.getNode()));
+                if (!jukebox.getAnimeBank().containsKey(node.getNode().getId())) {
+                    jukebox.getAnimeBank().put(node.getNode().getId(), new IwaAnime(node.getNode()));
                     newAnime.add(node.getNode().getId());
                 }
                 user.addMalIds(status, node.getNode().getId());
@@ -152,11 +237,11 @@ public class GuildSession {
                                 String videoUrl = Constants.animethemes.VIDEO_URL_TEMPLATE
                                         .replace(Constants.animethemes.ANIME_SLUG, anime.getSlug())
                                         .replace(Constants.animethemes.ANIMETHEME_SLUG, animeTheme.getSlug())
-                                        .replace(Constants.animethemes.VIDEO_TAGS, video.getTags());
+                                        .replace(Constants.animethemes.VIDEO_TAGS, video.getTags() == null ? "" : ("-" + video.getTags()));
                                 IwaTheme theme = new IwaTheme(video.getId(), animeTheme.getSong().getTitle(), artists, video.getAudio().getLink(), videoUrl, malId);
-                                if (animeBank.containsKey(malId)) {
-                                    themeBank.putIfAbsent(theme.getId(), theme);
-                                    animeBank.get(malId).addThemes(theme.getId());
+                                if (jukebox.getAnimeBank().containsKey(malId)) {
+                                    jukebox.getThemeBank().putIfAbsent(theme.getId(), theme);
+                                    jukebox.getAnimeBank().get(malId).addThemes(theme.getId());
                                 } else {
                                     logger.error("could not find entry for " + malId + " (" + anime.getName() + ")");
                                 }

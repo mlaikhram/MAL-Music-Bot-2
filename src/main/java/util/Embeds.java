@@ -1,13 +1,38 @@
 package util;
 
+import model.iwa.IwaAnime;
+import model.iwa.IwaTheme;
 import model.iwa.IwaUser;
 import model.jikan.JikanAnimeStats;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Embeds {
+
+    public static MessageEmbed IwaTheme(IwaTheme theme, IwaAnime anime, List<IwaUser> users) {
+        return new EmbedBuilder()
+                .setTitle(theme.getTitle())
+                .setDescription(String.format("[AnimeThemes](%s)", theme.getVideoUrl()))
+                .setColor(15017372)
+                .setThumbnail(anime.getPictureUrl())
+                .addField(anime.getName(), formatAnimeInfo(anime), false)
+                .setFooter(users.stream().map(IwaUser::getUsername).collect(Collectors.joining(", ")) + " should've known that one")
+                .build();
+    }
+
+    private static String formatAnimeInfo(IwaAnime anime) {
+        StringBuilder animeInfo = new StringBuilder();
+        for (String altName : anime.getAltNames()) {
+            animeInfo.append(altName);
+            animeInfo.append('\n');
+        }
+        animeInfo.append(String.format("\n[MyAnimeList Page](%s)", anime.getUrl()));
+
+        return animeInfo.toString();
+    }
 
     public static MessageEmbed List(String title, List<String> items) {
         return new EmbedBuilder()
