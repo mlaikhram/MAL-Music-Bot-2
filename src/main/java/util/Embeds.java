@@ -15,21 +15,22 @@ public class Embeds {
     public static MessageEmbed IwaTheme(IwaTheme theme, IwaAnime anime, List<IwaUser> users) {
         return new EmbedBuilder()
                 .setTitle(theme.getTitle())
-                .setDescription(String.format("[AnimeThemes](%s)", theme.getVideoUrl()))
+                .setDescription("*by " + StringUtils.joinWithAnd(theme.getArtists(), "nobody") + "*")
                 .setColor(15017372)
                 .setThumbnail(anime.getPictureUrl())
-                .addField(anime.getName(), formatAnimeInfo(anime), false)
-                .setFooter(users.stream().map(IwaUser::getUsername).collect(Collectors.joining(", ")) + " should've known that one")
+                .addField(anime.getName(), formatThemeInfo(theme, anime), false)
+                .setFooter(StringUtils.joinWithAnd(users.stream().map(IwaUser::getUsername).collect(Collectors.toList()), "Nobody") + " should've known that one")
                 .build();
     }
 
-    private static String formatAnimeInfo(IwaAnime anime) {
+    private static String formatThemeInfo(IwaTheme theme, IwaAnime anime) {
         StringBuilder animeInfo = new StringBuilder();
         for (String altName : anime.getAltNames()) {
             animeInfo.append(altName);
             animeInfo.append('\n');
         }
         animeInfo.append(String.format("\n[MyAnimeList Page](%s)", anime.getUrl()));
+        animeInfo.append(String.format("\n[AnimeThemes Page](%s)", theme.getVideoUrl()));
 
         return animeInfo.toString();
     }

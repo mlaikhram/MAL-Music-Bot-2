@@ -23,14 +23,15 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void queue(AudioTrack track) {
-        if (!this.player.startTrack(track, true)) {
-            this.queue.offer(track);
-        }
+        player.playTrack(track);
+//        if (!this.player.startTrack(track, true)) {
+//            this.queue.offer(track);
+//        }
     }
 
-    public void nextTrack() {
-        this.player.startTrack(this.queue.poll(), false);
-    }
+//    public void nextTrack() {
+//        this.player.startTrack(this.queue.poll(), false);
+//    }
 
     public void stopTrack() {
         this.player.stopTrack();

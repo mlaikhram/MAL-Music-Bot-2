@@ -3,7 +3,6 @@ package listener;
 import audio.SessionManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.managers.AudioManager;
 import util.Constants;
@@ -15,7 +14,7 @@ public class MALMusicListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        event.deferReply().queue();
+        event.deferReply(event.getName().equals(Constants.commands.STOP)).queue();
         switch (event.getName()) {
             case Constants.commands.ADD_USER:
                 addUser(event);
@@ -31,6 +30,10 @@ public class MALMusicListener extends ListenerAdapter {
 
             case Constants.commands.PLAY:
                 play(event);
+                break;
+
+            case Constants.commands.STOP:
+                stop(event);
                 break;
         }
     }
@@ -52,5 +55,9 @@ public class MALMusicListener extends ListenerAdapter {
         Guild guild = event.getGuild();
         AudioManager audioManager = guild.getAudioManager();
         SessionManager.getInstance().getSession(guild).playTheme(audioManager, commander, event.getHook());
+    }
+
+    private void stop(SlashCommandInteractionEvent event) {
+        SessionManager.getInstance().getSession(event.getGuild()).stopTheme(event.getHook());
     }
 }

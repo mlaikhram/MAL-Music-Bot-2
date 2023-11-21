@@ -61,6 +61,14 @@ public class GuildSession {
         this.jukebox = new IwaJukebox();
     }
 
+    public void stopTheme(InteractionHook hook) {
+        // TODO: guardrails
+        currentSongHook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.PendingEmbed("Stopping Song", "You suck...")).build()).queue();
+        scheduler.stopTrack();
+        currentSongHook = null;
+        hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.CompleteEmbed("Stopped the Song", "You suck...")).build()).queue();
+    }
+
     public void playTheme(AudioManager audioManager, Member commander, InteractionHook hook) {
         logger.info("attempting to play a song");
         try {
@@ -128,7 +136,6 @@ public class GuildSession {
     }
 
     public void songEnded(AudioTrackEndReason endReason) {
-        // TODO: that song was : format jukebox.getLastTheme()
         logger.info("ended because " + endReason);
         logger.info("this song was " + jukebox.getLastTheme());
         IwaTheme theme = jukebox.getLastTheme();
@@ -237,7 +244,7 @@ public class GuildSession {
                                 String videoUrl = Constants.animethemes.VIDEO_URL_TEMPLATE
                                         .replace(Constants.animethemes.ANIME_SLUG, anime.getSlug())
                                         .replace(Constants.animethemes.ANIMETHEME_SLUG, animeTheme.getSlug())
-                                        .replace(Constants.animethemes.VIDEO_TAGS, video.getTags() == null ? "" : ("-" + video.getTags()));
+                                        .replace(Constants.animethemes.VIDEO_TAGS, (video.getTags() == null || video.getTags().isBlank()) ? "" : ("-" + video.getTags()));
                                 IwaTheme theme = new IwaTheme(video.getId(), animeTheme.getSong().getTitle(), artists, video.getAudio().getLink(), videoUrl, malId);
                                 if (jukebox.getAnimeBank().containsKey(malId)) {
                                     jukebox.getThemeBank().putIfAbsent(theme.getId(), theme);
