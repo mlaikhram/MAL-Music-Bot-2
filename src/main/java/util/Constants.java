@@ -1,5 +1,7 @@
 package util;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Constants {
 
     public static class commands {
@@ -9,6 +11,10 @@ public class Constants {
         public static final String PLAY = "play";
         public static final String STOP = "stop";
         public static final String SETTINGS = "settings";
+    }
+
+    public static class componentids {
+        public static final String ANIME_TYPES_DROPDOWN = "settings-anime-types";
     }
 
     public static class options {
@@ -22,8 +28,21 @@ public class Constants {
         public static final String ANIME_URL_TEMPLATE = "https://myanimelist.net/anime/" + MAL_ID;
 
         public enum status {
+            completed,
             watching,
-            completed
+            on_hold,
+            dropped,
+            plan_to_watch
+        }
+
+        public enum type {
+            tv,
+            movie,
+            special,
+            ova,
+            ona,
+            music,
+            unknown
         }
     }
 
@@ -32,5 +51,13 @@ public class Constants {
         public static final String ANIMETHEME_SLUG = "{animethemeSlug}";
         public static final String VIDEO_TAGS = "{videoTags}";
         public static final String VIDEO_URL_TEMPLATE = "https://animethemes.moe/anime/" + ANIME_SLUG + "/" + ANIMETHEME_SLUG + VIDEO_TAGS;
+    }
+
+    public enum Balancers {
+        UNIFORM,
+        BALANCED,
+        OVERLAP,
+        INTERSECT,
+        WEIGHTED
     }
 }

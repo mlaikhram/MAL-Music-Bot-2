@@ -3,11 +3,14 @@ package listener;
 import audio.SessionManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.managers.AudioManager;
 import util.Constants;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+
+import java.util.Collection;
 
 
 public class MALMusicListener extends ListenerAdapter {
@@ -35,6 +38,19 @@ public class MALMusicListener extends ListenerAdapter {
             case Constants.commands.STOP:
                 stop(event);
                 break;
+
+            case Constants.commands.SETTINGS:
+                settings(event);
+                break;
+        }
+    }
+
+    @Override
+    public void onStringSelectInteraction(StringSelectInteractionEvent event) {
+        event.deferEdit().queue();
+        switch (event.getComponentId()) {
+            case Constants.componentids.ANIME_TYPES_DROPDOWN:
+                setFilters(event.getValues(), event);
         }
     }
 
@@ -58,6 +74,17 @@ public class MALMusicListener extends ListenerAdapter {
     }
 
     private void stop(SlashCommandInteractionEvent event) {
-        SessionManager.getInstance().getSession(event.getGuild()).stopTheme(event.getHook());
+        Member commander = event.getMember();
+        Guild guild = event.getGuild();
+        AudioManager audioManager = guild.getAudioManager();
+        SessionManager.getInstance().getSession(guild).stopTheme(audioManager, commander, event.getHook());
+    }
+
+    private void settings(SlashCommandInteractionEvent event) {
+        SessionManager.getInstance().getSession(event.getGuild()).displayCurrentSettings(event.getHook());
+    }
+
+    private void setFilters(Collection<String> allowedTypes, StringSelectInteractionEvent event) {
+        SessionManager.getInstance().getSession(event.getGuild()).setFilters(allowedTypes, event.getHook());
     }
 }

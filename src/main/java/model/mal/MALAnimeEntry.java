@@ -1,6 +1,7 @@
 package model.mal;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import util.Constants;
 
 public class MALAnimeEntry {
 
@@ -14,7 +15,7 @@ public class MALAnimeEntry {
     private MALMainPicture picture;
 
     @JsonAlias("media_type")
-    private String type;
+    private Constants.myanimelist.type type;
 
     public long getId() {
         return id;
@@ -48,11 +49,11 @@ public class MALAnimeEntry {
         this.picture = picture;
     }
 
-    public String getType() {
+    public Constants.myanimelist.type getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(Constants.myanimelist.type type) {
         this.type = type;
     }
 

@@ -10,12 +10,14 @@ public class IwaAnime {
 
     private long malId;
     private LinkedHashSet<String> names;
+    private Constants.myanimelist.type type;
     private String pictureUrl;
     private Set<Long> themeSet;
 
     public IwaAnime(MALAnimeEntry animeEntry) {
         this.malId = animeEntry.getId();
         this.names = new LinkedHashSet<>();
+        this.type = animeEntry.getType();
         this.pictureUrl = animeEntry.getPicture().getMedium();
         this.themeSet = new HashSet<>();
 
@@ -39,6 +41,10 @@ public class IwaAnime {
 
     public String getName() {
         return names.iterator().next();
+    }
+
+    public Constants.myanimelist.type getType() {
+        return type;
     }
 
     public List<String> getAltNames() {

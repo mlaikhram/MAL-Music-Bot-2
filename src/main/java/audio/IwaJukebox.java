@@ -18,6 +18,7 @@ public class IwaJukebox {
     private final LinkedHashSet<Long> recentSongs;
     private IwaTheme currentSong;
 
+    private IwaFilter filter;
     private Balancer balancer;
     // TODO: the filter will create a filteredUsers and filteredAnimeBank:
     // TODO: filteredUsers will make sure user's anime list excludes all invalid shows and shows without valid themes
@@ -30,12 +31,13 @@ public class IwaJukebox {
         this.animeBank = new HashMap<>();
         this.themeBank = new HashMap<>();
         this.recentSongs = new LinkedHashSet<>();
+        this.filter = new IwaFilter();
         this.balancer = new UniformBalancer();
     }
 
     public IwaTheme getTheme() throws Exception {
         // TODO: properly set filter
-        balancer.setFilter(new IwaFilter());
+        balancer.setFilter(filter);
         long themeId = balancer.selectThemeId(users.values(), animeBank, themeBank, recentSongs);
         recentSongs.add(themeId);
         while ((float) recentSongs.size() / (float) balancer.getValidSongCount() > RECENT_SONG_RATIO) {
@@ -71,5 +73,9 @@ public class IwaJukebox {
 
     public Map<Long, IwaTheme> getThemeBank() {
         return themeBank;
+    }
+
+    public IwaFilter getFilter() {
+        return filter;
     }
 }

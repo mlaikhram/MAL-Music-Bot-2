@@ -15,7 +15,7 @@ public class Embeds {
     public static MessageEmbed IwaTheme(IwaTheme theme, IwaAnime anime, List<IwaUser> users) {
         return new EmbedBuilder()
                 .setTitle(theme.getTitle())
-                .setDescription("*by " + StringUtils.joinWithAnd(theme.getArtists(), "nobody") + "*")
+                .setDescription("*by " + StringUtils.joinWithAnd(theme.getArtists(), "unknown artists") + "*")
                 .setColor(15017372)
                 .setThumbnail(anime.getPictureUrl())
                 .addField(anime.getName(), formatThemeInfo(theme, anime), false)

@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
@@ -61,26 +62,56 @@ public class GuildSession {
         this.jukebox = new IwaJukebox();
     }
 
-    public void stopTheme(InteractionHook hook) {
-        // TODO: guardrails
-        currentSongHook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.PendingEmbed("Stopping Song", "You suck...")).build()).queue();
-        scheduler.stopTrack();
-        currentSongHook = null;
-        hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.CompleteEmbed("Stopped the Song", "You suck...")).build()).queue();
+    public void setFilters(Collection<String> allowedTypes, InteractionHook hook) {
+        jukebox.getFilter().setFilter(allowedTypes.stream().map(type -> Constants.myanimelist.type.valueOf(type)).collect(Collectors.toSet()));
+        displayCurrentSettings(hook);
+    }
+
+    public void displayCurrentSettings(InteractionHook hook) {
+        StringSelectMenu.Builder animeTypeSelectMenuBuilder = StringSelectMenu.create(Constants.componentids.ANIME_TYPES_DROPDOWN);
+        for (Constants.myanimelist.type type : Constants.myanimelist.type.values()) {
+            animeTypeSelectMenuBuilder.addOption(type.name(), type.name());
+        }
+        animeTypeSelectMenuBuilder.setMaxValues(Constants.myanimelist.type.values().length);
+        animeTypeSelectMenuBuilder.setDefaultValues(jukebox.getFilter().getAllowedTypes().stream().map(type -> type.name()).collect(Collectors.toSet()));
+        hook.editOriginal(new MessageEditBuilder().setActionRow(animeTypeSelectMenuBuilder.build()).build()).queue();
+    }
+
+    public void stopTheme(AudioManager audioManager, Member commander, InteractionHook hook) {
+        try {
+            if (currentSongHook == null) {
+                throw new Exception("I'm not even playing a song right now!");
+            } else if (!commander.getVoiceState().inAudioChannel() || commander.getGuild().getIdLong() != audioManager.getGuild().getIdLong() || commander.getVoiceState().getChannel().getIdLong() != audioManager.getConnectedChannel().getIdLong()) {
+                throw new Exception( "You can't tell me to stop! You're not even in this voice channel!");
+            } else {
+                currentSongHook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.PendingEmbed("Stopping Song", "You suck...")).build()).queue();
+                scheduler.stopTrack();
+                if (hook != null) {
+                    hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.CompleteEmbed("Stopped the Song", "You suck...")).build()).queue();
+                }
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            if (hook != null) {
+                hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.ErrorEmbed("Can't stop song", e.getMessage())).build()).queue();
+            }
+        }
     }
 
     public void playTheme(AudioManager audioManager, Member commander, InteractionHook hook) {
         logger.info("attempting to play a song");
         try {
+            if (currentSongHook != null && scheduler.isPlayingTrack()) {
+                stopTheme(audioManager, commander, null);
+            }
             if (!commander.getVoiceState().inAudioChannel()) {
                 throw new Exception("You must be in a voice channel to hear my song!");
             }
-            logger.info("user is in a voice channel");
             if (commander.getGuild().getIdLong() != audioManager.getGuild().getIdLong()) {
                 logger.error(String.format("user guild: %s, my guild: %s", commander.getGuild().getId(), audioManager.getGuild().getId()));
                 throw new Exception("You must join a voice channel on this server!");
             }
-            logger.info("user is in a voice channel on the server");
             VoiceChannel currentChannel = commander.getVoiceState().getChannel().asVoiceChannel();
             if (!audioManager.isConnected()) {
                 logger.info("opening audio connection to current channel");
@@ -88,56 +119,58 @@ public class GuildSession {
             } else if (audioManager.getConnectedChannel().getIdLong() != currentChannel.getIdLong()) {
                 throw new Exception("You are in the wrong voice channel!");
             }
-            hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.PendingEmbed("Finding a Song", "Thinking...")).build()).queue();
+            hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.PendingEmbed("Finding a Song", ConfigHandler.config().getRandomVoiceLine())).build()).queue();
             startAudioPlayer(hook);
         }
         catch (Exception e) {
             e.printStackTrace();
             hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Cannot play song", e.getMessage())).build()).queue();
+            currentSongHook = null;
         }
-
     }
 
-    public void startAudioPlayer(InteractionHook hook) throws Exception {
-        IwaTheme theme = jukebox.getTheme();
+    public void startAudioPlayer(InteractionHook hook) {
+        try {
+            IwaTheme theme = jukebox.getTheme(); // TODO: figure out why exception from Balancer not being caught (when there are 0 songs to choose from)
 
-        this.audioPlayerManager.loadItem(theme.getAudioUri(), new AudioLoadResultHandler() {
-            @Override
-            public void trackLoaded(AudioTrack track) {
-                scheduler.queue(track);
-                logger.info("now playing: " + theme.getAudioUri());
-                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.CompleteEmbed("Guess the Song", "What could it be?")).build()).queue();
-            }
-
-            @Override
-            public void playlistLoaded(AudioPlaylist playlist) {
-                //
-            }
-
-            @Override
-            public void noMatches() {
-                logger.error("Song uri did not match: " + theme.toString());
-                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I couldn't find the song for %s", theme.getVideoUrl()))).build()).queue();
-            }
-
-            @Override
-            public void loadFailed(FriendlyException exception) {
-                exception.printStackTrace();
-                logger.error("Song failed to load: " + theme.toString());
-                hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I tried to play %s but it wouldn't load!", theme.getVideoUrl()))).build()).queue();
-                if (exception.severity == FriendlyException.Severity.COMMON) {
-
-                } else {
-                    hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I tried to play %s, but it wouldn't load!", theme.getVideoUrl()))).build()).queue();
+            this.audioPlayerManager.loadItem(theme.getAudioUri(), new AudioLoadResultHandler() {
+                @Override
+                public void trackLoaded(AudioTrack track) {
+                    scheduler.queue(track);
+                    logger.info("now playing: " + theme.getAudioUri());
+                    hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.CompleteEmbed("Guess the Song", "What could it be?")).build()).queue();
                 }
-            }
-        });
-        currentSongHook = hook;
+
+                @Override
+                public void playlistLoaded(AudioPlaylist playlist) {
+                    //
+                }
+
+                @Override
+                public void noMatches() {
+                    logger.error("Song uri did not match: " + theme.toString());
+                    hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I couldn't find the song for %s", theme.getVideoUrl()))).build()).queue();
+                }
+
+                @Override
+                public void loadFailed(FriendlyException exception) {
+                    exception.printStackTrace();
+                    logger.error("Song failed to load: " + theme.toString());
+                    hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Error Loading Song", String.format("I tried to play %s but it wouldn't load!", theme.getVideoUrl()))).build()).queue();
+                }
+            });
+            currentSongHook = hook;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Cannot play song", e.getMessage())).build()).queue();
+        }
     }
 
     public void songEnded(AudioTrackEndReason endReason) {
         logger.info("ended because " + endReason);
         logger.info("this song was " + jukebox.getLastTheme());
+        logger.info("anime type: " + jukebox.getAnimeBank().get(jukebox.getLastTheme().getMalId()).getType());
         IwaTheme theme = jukebox.getLastTheme();
         List<IwaUser> users = jukebox.getUsers().stream().filter(user ->
                 user.getMalIds(Constants.myanimelist.status.completed.toString()).contains(theme.getMalId()) ||
@@ -176,7 +209,7 @@ public class GuildSession {
                 Set<Long> emptyAnime = new HashSet<>();
                 for (IwaAnime anime : jukebox.getAnimeBank().values()) {
                     if (anime.getThemeSet().isEmpty()) {
-                        logger.warn(anime.getName() + " does not have any themes");
+//                        logger.warn(anime.getName() + " does not have any themes");
                         emptyAnime.add(anime.getMalId());
                     }
                 }

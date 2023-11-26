@@ -12,3 +12,6 @@ animethemes:
 
 jikan:
   url: https://api.jikan.moe/v4
+
+voiceLines:
+  - This is a loading message...

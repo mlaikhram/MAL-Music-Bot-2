@@ -2,6 +2,9 @@ package model.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 public class YmlConfig {
 
     @JsonProperty
@@ -15,6 +18,10 @@ public class YmlConfig {
 
     @JsonProperty
     private JikanConfig jikan;
+
+    @JsonProperty
+    private ArrayList<String> voiceLines;
+
 
     public DiscordConfig getDiscord() {
         return discord;
@@ -31,4 +38,12 @@ public class YmlConfig {
     public JikanConfig getJikan() {
         return jikan;
     }
+
+    public String getRandomVoiceLine() {
+        if (voiceLines.isEmpty()) {
+            return "";
+        }
+        return voiceLines.get(new Random().nextInt(voiceLines.size())) + " ";
+    }
+
 }
