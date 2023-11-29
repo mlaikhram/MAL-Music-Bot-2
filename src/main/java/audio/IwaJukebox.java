@@ -20,11 +20,7 @@ public class IwaJukebox {
 
     private IwaFilter filter;
     private Balancer balancer;
-    // TODO: the filter will create a filteredUsers and filteredAnimeBank:
-    // TODO: filteredUsers will make sure user's anime list excludes all invalid shows and shows without valid themes
-    // TODO: filteredAnimeBank will make sure each anime excludes invalid themes and /shows without valid themes/?
-    // TODO: balancer will run on this set (and the recentSongs set) and then produce an id
-    // TODO: if the produced id is in the recentSongs list, iwa will complain about the balancer, and a song will not be played
+
 
     public IwaJukebox() {
         this.users = new TreeMap<>();
@@ -36,7 +32,6 @@ public class IwaJukebox {
     }
 
     public IwaTheme getTheme() throws Exception {
-        // TODO: properly set filter
         balancer.setFilter(filter);
         long themeId = balancer.selectThemeId(users.values(), animeBank, themeBank, recentSongs);
         recentSongs.add(themeId);
@@ -61,10 +56,12 @@ public class IwaJukebox {
 
     public void addUser(IwaUser user) {
         users.put(user.getUsername().toLowerCase(), user);
+        filter.invalidate();
     }
 
     public void removeUser(String username) {
         users.remove(username.toLowerCase());
+        filter.invalidate();
     }
 
     public Map<Long, IwaAnime> getAnimeBank() {
@@ -77,5 +74,13 @@ public class IwaJukebox {
 
     public IwaFilter getFilter() {
         return filter;
+    }
+
+    public Balancer getBalancer() {
+        return balancer;
+    }
+
+    public void setBalancer(Balancer balancer) {
+        this.balancer = balancer;
     }
 }

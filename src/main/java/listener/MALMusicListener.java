@@ -51,6 +51,11 @@ public class MALMusicListener extends ListenerAdapter {
         switch (event.getComponentId()) {
             case Constants.componentids.ANIME_TYPES_DROPDOWN:
                 setFilters(event.getValues(), event);
+                break;
+
+            case Constants.componentids.ANIME_BALANCER_DROPDOWN:
+                setBalancer(event.getValues().get(0), event);
+                break;
         }
     }
 
@@ -86,5 +91,9 @@ public class MALMusicListener extends ListenerAdapter {
 
     private void setFilters(Collection<String> allowedTypes, StringSelectInteractionEvent event) {
         SessionManager.getInstance().getSession(event.getGuild()).setFilters(allowedTypes, event.getHook());
+    }
+
+    private void setBalancer(String balancer, StringSelectInteractionEvent event) {
+        SessionManager.getInstance().getSession(event.getGuild()).setBalancer(balancer, event.getHook());
     }
 }

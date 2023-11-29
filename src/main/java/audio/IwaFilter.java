@@ -11,6 +11,7 @@ public class IwaFilter {
 
     private Set<Constants.myanimelist.type> allowedTypes;
 
+    private Set<Long> invalidUsers;
     private Set<Long> invalidAnime;
     private Set<Long> invalidThemes;
 
@@ -18,8 +19,7 @@ public class IwaFilter {
         this.allowedTypes = new HashSet<>();
         this.allowedTypes.addAll(Arrays.asList(Constants.myanimelist.type.values()));
 
-        this.invalidAnime = null;
-        this.invalidThemes = null;
+        invalidate();
     }
 
     public Set<Constants.myanimelist.type> getAllowedTypes() {
@@ -33,6 +33,7 @@ public class IwaFilter {
     }
 
     public void createFilter(Collection<IwaUser> users, Map<Long, IwaAnime> animeBank, Map<Long, IwaTheme> themeBank) {
+        this.invalidUsers = new HashSet<>();
         this.invalidAnime = new HashSet<>();
         this.invalidThemes = new HashSet<>();
         animeBank.values().forEach(anime -> {
@@ -41,6 +42,16 @@ public class IwaFilter {
                 invalidThemes.addAll(anime.getThemeSet());
             }
         });
+        users.forEach(user -> {
+            if (user.getMalIds(Constants.myanimelist.status.completed.toString()).stream().noneMatch(this::isValidAnime) &&
+                user.getMalIds(Constants.myanimelist.status.watching.toString()).stream().noneMatch(this::isValidAnime)) {
+                invalidUsers.add(user.getMalId());
+            }
+        });
+    }
+
+    public boolean isValidUser(long id) {
+        return !invalidUsers.contains(id);
     }
 
     public boolean isValidAnime(long id) {
@@ -52,10 +63,11 @@ public class IwaFilter {
     }
 
     public boolean isValid() {
-        return this.invalidAnime != null && this.invalidThemes != null;
+        return this.invalidUsers != null && this.invalidAnime != null && this.invalidThemes != null;
     }
 
     public void invalidate() {
+        this.invalidUsers = null;
         this.invalidAnime = null;
         this.invalidThemes = null;
     }

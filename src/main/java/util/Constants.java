@@ -15,6 +15,7 @@ public class Constants {
 
     public static class componentids {
         public static final String ANIME_TYPES_DROPDOWN = "settings-anime-types";
+        public static final String ANIME_BALANCER_DROPDOWN = "settings-anime-balancer";
     }
 
     public static class options {

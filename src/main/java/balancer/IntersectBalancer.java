@@ -11,19 +11,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class UniformBalancer extends Balancer {
+public class IntersectBalancer extends Balancer {
 
-    private static final Logger logger = LoggerFactory.getLogger(UniformBalancer.class);
+    private static final Logger logger = LoggerFactory.getLogger(IntersectBalancer.class);
 
     private int validSongCount;
 
-    public UniformBalancer() {
+    public IntersectBalancer() {
         super();
     }
 
     @Override
     public Balancers.type getType() {
-        return Balancers.type.UNIFORM;
+        return Balancers.type.INTERSECT;
     }
 
     @Override
@@ -33,15 +33,15 @@ public class UniformBalancer extends Balancer {
         }
 
 
-        List<Long> themeList = Stream.concat(
-                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream),
-                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream)
-        )
-                .filter(id -> filter.isValidAnime(id))
-                .flatMap(id -> animeBank.get(id).getThemeSet().stream())
-                .filter(id -> filter.isValidTheme(id))
-                .collect(Collectors.toList());
-
+        List<Long> themeList = new ArrayList(intersect(users.stream().map(user -> Stream.concat(
+                    user.getMalIds(Constants.myanimelist.status.completed.toString()).stream(),
+                    user.getMalIds(Constants.myanimelist.status.watching.toString()).stream()
+                ).filter(id -> filter.isValidAnime(id))
+                .map(id -> animeBank.get(id).getThemeSet().stream()
+                        .filter(themeId -> filter.isValidTheme(themeId)).collect(Collectors.toSet()))
+                .flatMap(Set::stream)
+                .toList())
+                .toList()));
 
         if (themeList.size() == 0) {
             throw new Exception("Could not find any songs matching your filters! Try adjusting them or adding more users.");
@@ -64,5 +64,14 @@ public class UniformBalancer extends Balancer {
     @Override
     public int getValidSongCount() {
         return this.validSongCount;
+    }
+
+    private static <T> Set<T> intersect(Collection<? extends Collection<T>> collections) {
+        if(collections.isEmpty()) return Collections.emptySet();
+        Collection<T> smallest
+                = Collections.min(collections, Comparator.comparingInt(Collection::size));
+        return smallest.stream().distinct()
+                .filter(t -> collections.stream().allMatch(c -> c==smallest || c.contains(t)))
+                .collect(Collectors.toSet());
     }
 }

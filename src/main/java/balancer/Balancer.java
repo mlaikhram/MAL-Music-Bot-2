@@ -18,6 +18,7 @@ public abstract class Balancer {
 
     }
 
+    public abstract Balancers.type getType();
     public abstract long selectThemeId(Collection<IwaUser> users, Map<Long, IwaAnime> animeBank, Map<Long, IwaTheme> themeBank, Set<Long> themeBlackList) throws Exception;
     public abstract int getValidSongCount();
 

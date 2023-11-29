@@ -1,5 +1,6 @@
 package audio;
 
+import balancer.Balancers;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -22,6 +23,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -62,6 +64,11 @@ public class GuildSession {
         this.jukebox = new IwaJukebox();
     }
 
+    public void setBalancer(String selectedBalancer, InteractionHook hook) {
+        jukebox.setBalancer(Balancers.create(Balancers.type.valueOf(selectedBalancer)));
+        displayCurrentSettings(hook);
+    }
+
     public void setFilters(Collection<String> allowedTypes, InteractionHook hook) {
         jukebox.getFilter().setFilter(allowedTypes.stream().map(type -> Constants.myanimelist.type.valueOf(type)).collect(Collectors.toSet()));
         displayCurrentSettings(hook);
@@ -74,7 +81,19 @@ public class GuildSession {
         }
         animeTypeSelectMenuBuilder.setMaxValues(Constants.myanimelist.type.values().length);
         animeTypeSelectMenuBuilder.setDefaultValues(jukebox.getFilter().getAllowedTypes().stream().map(type -> type.name()).collect(Collectors.toSet()));
-        hook.editOriginal(new MessageEditBuilder().setActionRow(animeTypeSelectMenuBuilder.build()).build()).queue();
+
+        StringSelectMenu.Builder animeBalancerSelectMenuBuilder = StringSelectMenu.create(Constants.componentids.ANIME_BALANCER_DROPDOWN);
+        for (Balancers.type type : Balancers.type.values()) {
+            animeBalancerSelectMenuBuilder.addOption(type.name(), type.name());
+        }
+        animeBalancerSelectMenuBuilder.setMaxValues(1);
+        animeBalancerSelectMenuBuilder.setDefaultValues(jukebox.getBalancer().getType().name());
+
+        hook.editOriginal(MessageEditBuilder.fromCreateData(new MessageCreateBuilder()
+                .addActionRow(animeTypeSelectMenuBuilder.build())
+                .addActionRow(animeBalancerSelectMenuBuilder.build())
+                .build()
+        ).build()).queue();
     }
 
     public void stopTheme(AudioManager audioManager, Member commander, InteractionHook hook) {

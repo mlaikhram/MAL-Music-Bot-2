@@ -11,19 +11,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class UniformBalancer extends Balancer {
+public class BalancedBalancer extends Balancer {
 
-    private static final Logger logger = LoggerFactory.getLogger(UniformBalancer.class);
+    private static final Logger logger = LoggerFactory.getLogger(BalancedBalancer.class);
 
     private int validSongCount;
 
-    public UniformBalancer() {
+    public BalancedBalancer() {
         super();
     }
 
     @Override
     public Balancers.type getType() {
-        return Balancers.type.UNIFORM;
+        return Balancers.type.BALANCED;
     }
 
     @Override
@@ -33,7 +33,7 @@ public class UniformBalancer extends Balancer {
         }
 
 
-        List<Long> themeList = Stream.concat(
+        List<Long> masterThemeList = Stream.concat(
                 users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream),
                 users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream)
         )
@@ -42,12 +42,25 @@ public class UniformBalancer extends Balancer {
                 .filter(id -> filter.isValidTheme(id))
                 .collect(Collectors.toList());
 
+        List<IwaUser> userList = users.stream().filter(user -> filter.isValidUser(user.getMalId())).toList();
 
-        if (themeList.size() == 0) {
+        if (userList.size() == 0) {
             throw new Exception("Could not find any songs matching your filters! Try adjusting them or adding more users.");
         }
         else {
-            this.validSongCount = themeList.size();
+            Random r = new Random();
+            IwaUser selectedUser = userList.get(r.nextInt(userList.size()));
+
+            List<Long> themeList = Stream.concat(
+                    selectedUser.getMalIds(Constants.myanimelist.status.completed.toString()).stream(),
+                    selectedUser.getMalIds(Constants.myanimelist.status.completed.toString()).stream()
+            )
+                    .filter(id -> filter.isValidAnime(id))
+                    .flatMap(id -> animeBank.get(id).getThemeSet().stream())
+                    .filter(id -> filter.isValidTheme(id))
+                    .collect(Collectors.toList());
+
+            this.validSongCount = masterThemeList.size();
             List<Long> blackListAppliedThemeList = themeList.stream().filter(id -> !themeBlackList.contains(id)).collect(Collectors.toList());
 
             if (blackListAppliedThemeList.size() == 0) {
@@ -56,7 +69,6 @@ public class UniformBalancer extends Balancer {
                 blackListAppliedThemeList = themeList;
             }
 
-            Random r = new Random();
             return blackListAppliedThemeList.get(r.nextInt(blackListAppliedThemeList.size()));
         }
     }
