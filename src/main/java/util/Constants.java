@@ -42,7 +42,9 @@ public class Constants {
             special,
             ova,
             ona,
+            tv_special,
             music,
+            pv,
             unknown
         }
     }
