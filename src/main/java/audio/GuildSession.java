@@ -49,8 +49,6 @@ public class GuildSession {
     public final TrackScheduler scheduler;
     private final AudioSendHandler audioSendHandler;
 
-    private final Guild guild;
-
     private IwaJukebox jukebox;
 
     private Message currentSongMessage;
@@ -64,7 +62,6 @@ public class GuildSession {
         this.scheduler = new TrackScheduler(audioPlayer, this);
         audioPlayer.addListener(this.scheduler);
         this.audioSendHandler = new AudioPlayerSendHandler(audioPlayer);
-        this.guild = guild;
         guild.getAudioManager().setSendingHandler(this.audioSendHandler);
 
         this.jukebox = new IwaJukebox();
