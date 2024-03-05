@@ -16,6 +16,7 @@ public class Constants {
     public static class componentids {
         public static final String ANIME_TYPES_DROPDOWN = "settings-anime-types";
         public static final String ANIME_BALANCER_DROPDOWN = "settings-anime-balancer";
+        public static final String AUTOPLAY_SELECTOR = "settings-autoplay";
     }
 
     public static class options {
@@ -56,11 +57,8 @@ public class Constants {
         public static final String VIDEO_URL_TEMPLATE = "https://animethemes.moe/anime/" + ANIME_SLUG + "/" + ANIMETHEME_SLUG + VIDEO_TAGS;
     }
 
-    public enum Balancers {
-        UNIFORM,
-        BALANCED,
-        OVERLAP,
-        INTERSECT,
-        WEIGHTED
+    public enum AutoplayOptions {
+        DISABLED,
+        ENABLED
     }
 }

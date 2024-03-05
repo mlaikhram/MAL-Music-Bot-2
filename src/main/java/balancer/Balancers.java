@@ -5,7 +5,9 @@ public class Balancers {
     public enum type {
         UNIFORM,
         BALANCED,
-        INTERSECT
+        INTERSECT,
+        OVERLAP,
+        WEIGHTED
     }
 
     public static Balancer create(type type) {

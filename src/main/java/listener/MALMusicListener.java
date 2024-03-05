@@ -56,6 +56,9 @@ public class MALMusicListener extends ListenerAdapter {
             case Constants.componentids.ANIME_BALANCER_DROPDOWN:
                 setBalancer(event.getValues().get(0), event);
                 break;
+
+            case Constants.componentids.AUTOPLAY_SELECTOR:
+                autoplayManager(event.getValues().get(0), event);
         }
     }
 
@@ -95,5 +98,9 @@ public class MALMusicListener extends ListenerAdapter {
 
     private void setBalancer(String balancer, StringSelectInteractionEvent event) {
         SessionManager.getInstance().getSession(event.getGuild()).setBalancer(balancer, event.getHook());
+    }
+
+    private void autoplayManager(String autoplay, StringSelectInteractionEvent event) {
+        SessionManager.getInstance().getSession(event.getGuild()).autoplayManager(autoplay, event.getHook());
     }
 }

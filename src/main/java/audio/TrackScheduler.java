@@ -15,6 +15,8 @@ public class TrackScheduler extends AudioEventAdapter {
 
     private final GuildSession session;
 
+    private boolean autoplay = false;
+
     public TrackScheduler(AudioPlayer player, GuildSession session) {
         this.player = player;
         this.queue = new LinkedBlockingQueue<>();
@@ -22,7 +24,8 @@ public class TrackScheduler extends AudioEventAdapter {
         this.session = session;
     }
 
-    public void queue(AudioTrack track) {
+    public void queue(AudioTrack track, boolean autoplay) {
+        this.autoplay = true;
         player.playTrack(track);
 //        if (!this.player.startTrack(track, true)) {
 //            this.queue.offer(track);
@@ -38,12 +41,13 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void stopTrack() {
+        this.autoplay = false;
         this.player.stopTrack();
         this.queue.clear();
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        session.songEnded(endReason);
+        session.songEnded(endReason, autoplay);
     }
 }
