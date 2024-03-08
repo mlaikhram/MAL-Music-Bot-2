@@ -8,22 +8,24 @@ import org.slf4j.LoggerFactory;
 import util.Constants;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class UniformBalancer extends Balancer {
+// TODO: TEST THIS ONE
+public class WeightedBalancer extends Balancer {
 
-    private static final Logger logger = LoggerFactory.getLogger(UniformBalancer.class);
+    private static final Logger logger = LoggerFactory.getLogger(WeightedBalancer.class);
 
     private int validSongCount;
 
-    public UniformBalancer() {
+    public WeightedBalancer() {
         super();
     }
 
     @Override
     public Balancers.type getType() {
-        return Balancers.type.UNIFORM;
+        return Balancers.type.WEIGHTED;
     }
 
     @Override
@@ -33,14 +35,16 @@ public class UniformBalancer extends Balancer {
         }
 
 
-        List<Long> themeList = Stream.concat(
-                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream),
-                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.watching.toString())).flatMap(Set::stream)
-        )
-                .filter(id -> filter.isValidAnime(id))
-                .flatMap(id -> animeBank.get(id).getThemeSet().stream())
-                .filter(id -> filter.isValidTheme(id))
-                .collect(Collectors.toList());
+        List<Long> themeList = users.stream().map(user -> Stream.concat(
+                    user.getMalIds(Constants.myanimelist.status.completed.toString()).stream(),
+                    user.getMalIds(Constants.myanimelist.status.watching.toString()).stream()
+                ).filter(id -> filter.isValidAnime(id))
+                .map(id -> animeBank.get(id).getThemeSet().stream()
+                        .filter(themeId -> filter.isValidTheme(themeId)).collect(Collectors.toSet()))
+                .flatMap(Set::stream)
+                .toList())
+                .flatMap(List::stream)
+                .toList();
 
 
         if (themeList.size() == 0) {

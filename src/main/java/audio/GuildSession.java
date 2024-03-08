@@ -99,7 +99,7 @@ public class GuildSession {
 
         StringSelectMenu.Builder animeBalancerSelectMenuBuilder = StringSelectMenu.create(Constants.componentids.ANIME_BALANCER_DROPDOWN);
         for (Balancers.type type : Balancers.type.values()) {
-            animeBalancerSelectMenuBuilder.addOption(type.name(), type.name());
+            animeBalancerSelectMenuBuilder.addOption(type.name(), type.name(), type.description());
         }
         animeBalancerSelectMenuBuilder.setMaxValues(1);
         animeBalancerSelectMenuBuilder.setDefaultValues(jukebox.getBalancer().getType().name());

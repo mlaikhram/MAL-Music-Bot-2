@@ -35,7 +35,7 @@ public class BalancedBalancer extends Balancer {
 
         List<Long> masterThemeList = Stream.concat(
                 users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream),
-                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream)
+                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.watching.toString())).flatMap(Set::stream)
         )
                 .filter(id -> filter.isValidAnime(id))
                 .flatMap(id -> animeBank.get(id).getThemeSet().stream())
@@ -53,7 +53,7 @@ public class BalancedBalancer extends Balancer {
 
             List<Long> themeList = Stream.concat(
                     selectedUser.getMalIds(Constants.myanimelist.status.completed.toString()).stream(),
-                    selectedUser.getMalIds(Constants.myanimelist.status.completed.toString()).stream()
+                    selectedUser.getMalIds(Constants.myanimelist.status.watching.toString()).stream()
             )
                     .filter(id -> filter.isValidAnime(id))
                     .flatMap(id -> animeBank.get(id).getThemeSet().stream())
