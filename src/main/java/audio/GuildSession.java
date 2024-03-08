@@ -55,6 +55,8 @@ public class GuildSession {
 
     private AutoplayOptions autoplay = AutoplayOptions.DISABLED;
 
+    private boolean isChannelEmpty = true;
+
     public GuildSession(Guild guild) {
         this.audioPlayerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(this.audioPlayerManager);
@@ -116,10 +118,10 @@ public class GuildSession {
         try {
             if (currentSongMessage == null) {
                 throw new Exception("I'm not even playing a song right now!");
-            } else if (!commander.getVoiceState().inAudioChannel() || commander.getGuild().getIdLong() != audioManager.getGuild().getIdLong() || commander.getVoiceState().getChannel().getIdLong() != audioManager.getConnectedChannel().getIdLong()) {
+            } else if (commander != null && (!commander.getVoiceState().inAudioChannel() || commander.getGuild().getIdLong() != audioManager.getGuild().getIdLong() || commander.getVoiceState().getChannel().getIdLong() != audioManager.getConnectedChannel().getIdLong())) {
                 throw new Exception( "You can't tell me to stop! You're not even in this voice channel!");
             } else {
-                 currentSongMessage.editMessage(new MessageEditBuilder().setEmbeds(Embeds.PendingEmbed("Stopping Song", "You suck...")).build()).queue();
+                currentSongMessage.editMessage(new MessageEditBuilder().setEmbeds(Embeds.PendingEmbed("Stopping Song", "You suck...")).build()).queue();
                 scheduler.stopTrack();
                 if (hook != null) {
                     hook.sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.CompleteEmbed("Stopped the Song", "You suck...")).build()).queue();
@@ -174,8 +176,14 @@ public class GuildSession {
                 @Override
                 public void trackLoaded(AudioTrack track) {
                     scheduler.queue(track, autoplay == AutoplayOptions.ENABLED);
-                    logger.info("now playing: " + theme.getAudioUri());
-                    currentSongMessage.editMessage(new MessageEditBuilder().setEmbeds(Embeds.CompleteEmbed("Guess the Song", "What could it be?")).build()).queue();
+                    if (isChannelEmpty) {
+                        logger.info("I'm the only one in the voice channel, stopping song");
+                        scheduler.stopTrack();
+                    }
+                    else {
+                        logger.info("now playing: " + theme.getAudioUri());
+                        currentSongMessage.editMessage(new MessageEditBuilder().setEmbeds(Embeds.CompleteEmbed("Guess the Song", "What could it be?")).build()).queue();
+                    }
                 }
 
                 @Override
@@ -200,6 +208,7 @@ public class GuildSession {
         catch (Exception e) {
             e.printStackTrace();
             currentSongMessage.editMessage(new MessageEditBuilder().setEmbeds(Embeds.ErrorEmbed("Cannot play song", e.getMessage())).build()).queue();
+            currentSongMessage = null;
         }
     }
 
@@ -215,7 +224,7 @@ public class GuildSession {
 
         currentSongMessage.editMessage(new MessageEditBuilder().setEmbeds(Embeds.IwaTheme(theme, jukebox.getAnimeBank().get(theme.getMalId()), users)).build()).queue();
 
-        if (playAnotherSong) {
+        if (!isChannelEmpty && playAnotherSong && autoplay == AutoplayOptions.ENABLED) {
             currentSongMessage.getChannel().sendMessage(new MessageCreateBuilder().setEmbeds(Embeds.PendingEmbed("Finding another Song", ConfigHandler.config().getRandomVoiceLine())).build()).queue(message -> {
                 currentSongMessage = message;
                 startAudioPlayer();
@@ -340,5 +349,9 @@ public class GuildSession {
             }
             hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, String.format("Gathering songs for new anime entries (%s/%s)...", toIndex , newAnime.size()))).build()).queue();
         }
+    }
+
+    public void setChannelEmpty(boolean value) {
+        isChannelEmpty = value;
     }
 }

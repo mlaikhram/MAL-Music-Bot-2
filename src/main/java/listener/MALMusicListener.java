@@ -1,8 +1,11 @@
 package listener;
 
+import audio.GuildSession;
 import audio.SessionManager;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.managers.AudioManager;
@@ -60,6 +63,31 @@ public class MALMusicListener extends ListenerAdapter {
             case Constants.componentids.AUTOPLAY_SELECTOR:
                 autoplayManager(event.getValues().get(0), event);
         }
+    }
+
+    @Override
+    public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
+        long myId = event.getJDA().getSelfUser().getIdLong();
+        AudioChannelUnion leftChannel = event.getChannelLeft();
+        AudioChannelUnion joinedChannel = event.getChannelJoined();
+        GuildSession currentSession = SessionManager.getInstance().getSession(event.getGuild());
+        if (leftChannel != null && amAlone(leftChannel, myId)) {
+//            event.getEntity().getUser().openPrivateChannel().queue((channel) -> {
+//                channel.sendMessage("You left me alone in the voice channel!").queue();
+//            });
+            currentSession.setChannelEmpty(true);
+            if (currentSession.scheduler.isPlayingTrack()) {
+                currentSession.stopTheme(event.getGuild().getAudioManager(), null, null);
+            }
+            leftChannel.getGuild().getAudioManager().closeAudioConnection();
+        }
+        else if (joinedChannel != null && !amAlone(joinedChannel, myId)) {
+            currentSession.setChannelEmpty(false);
+        }
+    }
+
+    private boolean amAlone(AudioChannelUnion leftChannel, long myId) {
+        return leftChannel.getMembers().stream().anyMatch((member) -> member.getIdLong() == myId) && leftChannel.getMembers().size() == 1;
     }
 
     private void addUser(SlashCommandInteractionEvent event) {
