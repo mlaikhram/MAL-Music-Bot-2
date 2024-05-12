@@ -1,7 +1,5 @@
 package balancer;
 
-import net.dv8tion.jda.api.entities.emoji.Emoji;
-
 public class Balancers {
 
     public enum type {

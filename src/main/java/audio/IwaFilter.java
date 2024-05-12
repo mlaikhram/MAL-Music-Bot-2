@@ -9,6 +9,7 @@ import java.util.*;
 
 public class IwaFilter {
 
+    private Set<Constants.myanimelist.status> allowedStatuses;
     private Set<Constants.myanimelist.type> allowedTypes;
 
     private Set<Long> invalidUsers;
@@ -16,9 +17,27 @@ public class IwaFilter {
     private Set<Long> invalidThemes;
 
     public IwaFilter() {
+        this.allowedStatuses = new HashSet<>();
+        // TODO: update to allow players to set value
+        this.allowedStatuses.addAll(Arrays.asList(
+                Constants.myanimelist.status.completed,
+                Constants.myanimelist.status.watching,
+                Constants.myanimelist.status.on_hold,
+                Constants.myanimelist.status.dropped
+        ));
         this.allowedTypes = new HashSet<>();
         this.allowedTypes.addAll(Arrays.asList(Constants.myanimelist.type.values()));
 
+        invalidate();
+    }
+
+    public Set<Constants.myanimelist.status> getAllowedStatuses() {
+        return allowedStatuses;
+    }
+
+    public void setStatusFilter(Collection<Constants.myanimelist.status> allowedStatuses) {
+        this.allowedStatuses.clear();
+        this.allowedStatuses.addAll(allowedStatuses);
         invalidate();
     }
 
@@ -26,7 +45,7 @@ public class IwaFilter {
         return allowedTypes;
     }
 
-    public void setFilter(Collection<Constants.myanimelist.type> allowedTypes) {
+    public void setTypeFilter(Collection<Constants.myanimelist.type> allowedTypes) {
         this.allowedTypes.clear();
         this.allowedTypes.addAll(allowedTypes);
         invalidate();
@@ -39,12 +58,11 @@ public class IwaFilter {
         animeBank.values().forEach(anime -> {
             if (!allowedTypes.contains(anime.getType())) {
                 invalidAnime.add(anime.getMalId());
-                invalidThemes.addAll(anime.getThemeSet());
+                invalidThemes.addAll(anime.getThemeSet().keySet());
             }
         });
         users.forEach(user -> {
-            if (user.getMalIds(Constants.myanimelist.status.completed.toString()).stream().noneMatch(this::isValidAnime) &&
-                user.getMalIds(Constants.myanimelist.status.watching.toString()).stream().noneMatch(this::isValidAnime)) {
+            if (user.getMalIdsByStatus(allowedStatuses).stream().noneMatch(this::isValidAnime)) {
                 invalidUsers.add(user.getMalId());
             }
         });

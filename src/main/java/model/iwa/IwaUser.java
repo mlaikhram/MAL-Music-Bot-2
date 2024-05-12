@@ -1,8 +1,10 @@
 package model.iwa;
 
 import model.jikan.JikanProfile;
+import util.Constants;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IwaUser {
 
@@ -10,7 +12,7 @@ public class IwaUser {
     private String username;
     private String profileUrl;
     private String profileImageUrl;
-    private Map<String, Set<Long>> malIdMap;
+    private Map<Constants.myanimelist.status, Map<Long, Integer>> malIdMap;
 
     public IwaUser(JikanProfile userProfile) {
         this.malId = userProfile.getMalId();
@@ -36,11 +38,22 @@ public class IwaUser {
         return profileImageUrl;
     }
 
-    public void addMalIds(String status, Long ... malIds) {
-        malIdMap.computeIfAbsent(status, (s) -> new HashSet<>()).addAll(Arrays.asList(malIds));
+    public void addMalIds(Constants.myanimelist.status status, Map.Entry<Long, Integer>... malIdNumEpisodesEntry) {
+        malIdMap.computeIfAbsent(status, (s) -> new HashMap<>()).putAll(Map.ofEntries(malIdNumEpisodesEntry));
     }
 
-    public Set<Long> getMalIds(String status) {
-        return malIdMap.getOrDefault(status, Set.of());
+    public Set<Long> getMalIdsByStatus(Collection<Constants.myanimelist.status> statuses) {
+        return statuses.stream().map(status -> malIdMap.containsKey(status) ? malIdMap.get(status).keySet() : new HashSet<Long>())
+                .flatMap(keyset -> keyset.stream())
+                .collect(Collectors.toSet());
+    }
+
+    public int getCurrentEpisodeNum(Long malId) {
+        for (Map<Long, Integer> malEntry : malIdMap.values()) {
+            if (malEntry.containsKey(malId)) {
+                return malEntry.get(malId);
+            }
+        }
+        return 0;
     }
 }

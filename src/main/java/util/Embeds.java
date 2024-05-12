@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Embeds {
@@ -65,8 +66,10 @@ public class Embeds {
                 .setDescription(String.format("[MyAnimeList Page](%s)", user.getProfileUrl()))
                 .setColor(color)
                 .setThumbnail(user.getProfileImageUrl())
-                .addField("Completed", user.getMalIds(Constants.myanimelist.status.completed.toString()).size() + (expectedStats == null ? "" : ("/" + expectedStats.getCompleted())), true)
-                .addField("Watching", user.getMalIds(Constants.myanimelist.status.watching.toString()).size() + (expectedStats == null ? "" : ("/" + expectedStats.getWatching())), true);
+                .addField("Completed", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.completed)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getCompleted())), true)
+                .addField("Watching", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.watching)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getWatching())), true)
+                .addField("On Hold", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.on_hold)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getOnHold())), true)
+                .addField("Dropped", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.dropped)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getDropped())), true);
     }
 
     public static MessageEmbed PendingEmbed(String title, String message) {

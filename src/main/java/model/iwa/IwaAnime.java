@@ -12,14 +12,14 @@ public class IwaAnime {
     private LinkedHashSet<String> names;
     private Constants.myanimelist.type type;
     private String pictureUrl;
-    private Set<Long> themeSet;
+    private Map<Long, Integer> themeSet;
 
     public IwaAnime(MALAnimeEntry animeEntry) {
         this.malId = animeEntry.getId();
         this.names = new LinkedHashSet<>();
         this.type = animeEntry.getType();
         this.pictureUrl = animeEntry.getPicture().getMedium();
-        this.themeSet = new HashSet<>();
+        this.themeSet = new HashMap<>();
 
         this.names.add(animeEntry.getTitle());
         if (animeEntry.getAltTitles().getEn() != null) {
@@ -59,11 +59,11 @@ public class IwaAnime {
         return pictureUrl;
     }
 
-    public Set<Long> getThemeSet() {
+    public Map<Long, Integer> getThemeSet() {
         return themeSet;
     }
 
-    public void addThemes(Long ... ids) {
-        themeSet.addAll(Arrays.asList(ids));
+    public void addThemes(Map.Entry<Long, Integer> ... idFirstEpisodeEntry) {
+        themeSet.putAll(Map.ofEntries(idFirstEpisodeEntry));
     }
 }

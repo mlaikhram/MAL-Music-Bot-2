@@ -33,24 +33,28 @@ public class UniformBalancer extends Balancer {
         }
 
 
-        List<Long> themeList = Stream.concat(
-                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.completed.toString())).flatMap(Set::stream),
-                users.stream().map(user -> user.getMalIds(Constants.myanimelist.status.watching.toString())).flatMap(Set::stream)
-        )
+        List<Long> themeList = users.stream()
+                .map(user -> user.getMalIdsByStatus(filter.getAllowedStatuses()))
+                .flatMap(Set::stream)
+                .distinct()
                 .filter(id -> filter.isValidAnime(id))
-                .flatMap(id -> animeBank.get(id).getThemeSet().stream())
+                .flatMap(id -> animeBank.get(id).getThemeSet().entrySet().stream()
+                        .filter(themeIdEntry -> users.stream()
+                                .map(user -> user.getCurrentEpisodeNum(id))
+                                .anyMatch(episodeNum -> themeIdEntry.getValue() <= episodeNum)))
+                .map(Map.Entry::getKey)
                 .filter(id -> filter.isValidTheme(id))
-                .collect(Collectors.toList());
+                .toList();
 
 
-        if (themeList.size() == 0) {
+        if (themeList.isEmpty()) {
             throw new Exception("Could not find any songs matching your filters! Try adjusting them or adding more users.");
         }
         else {
             this.validSongCount = themeList.size();
             List<Long> blackListAppliedThemeList = themeList.stream().filter(id -> !themeBlackList.contains(id)).collect(Collectors.toList());
 
-            if (blackListAppliedThemeList.size() == 0) {
+            if (blackListAppliedThemeList.isEmpty()) {
                 logger.warn("All valid songs are blacklisted, clearing blacklist and returning a song.");
                 themeBlackList.clear();
                 blackListAppliedThemeList = themeList;

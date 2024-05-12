@@ -75,7 +75,7 @@ public class GuildSession {
     }
 
     public void setFilters(Collection<String> allowedTypes, InteractionHook hook) {
-        jukebox.getFilter().setFilter(allowedTypes.stream().map(type -> Constants.myanimelist.type.valueOf(type)).collect(Collectors.toSet()));
+        jukebox.getFilter().setTypeFilter(allowedTypes.stream().map(type -> Constants.myanimelist.type.valueOf(type)).collect(Collectors.toSet()));
         displayCurrentSettings(hook);
     }
 
@@ -217,9 +217,8 @@ public class GuildSession {
         logger.info("this song was " + jukebox.getLastTheme());
         logger.info("anime type: " + jukebox.getAnimeBank().get(jukebox.getLastTheme().getMalId()).getType());
         IwaTheme theme = jukebox.getLastTheme();
-        List<IwaUser> users = jukebox.getUsers().stream().filter(user ->
-                user.getMalIds(Constants.myanimelist.status.completed.toString()).contains(theme.getMalId()) ||
-                user.getMalIds(Constants.myanimelist.status.watching.toString()).contains(theme.getMalId()))
+        List<IwaUser> users = jukebox.getUsers().stream()
+                .filter(user -> theme.getEpisodeList().getMinPoint() <= user.getCurrentEpisodeNum(theme.getMalId()))
                 .collect(Collectors.toList());
 
         currentSongMessage.editMessage(new MessageEditBuilder().setEmbeds(Embeds.IwaTheme(theme, jukebox.getAnimeBank().get(theme.getMalId()), users)).build()).queue();
@@ -253,9 +252,15 @@ public class GuildSession {
 
                 hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, "Populating anime list...", userProfile.getStatistics().getAnime())).build()).queue();
 
-                List<Long> newAnime = populateUser(user, Constants.myanimelist.status.completed.toString(), userProfile.getStatistics().getAnime(), hook);
-                newAnime.addAll(populateUser(user, Constants.myanimelist.status.watching.toString(), userProfile.getStatistics().getAnime(), hook));
-                logger.info(user.getUsername() + " | Total completed: " + user.getMalIds("completed").size() + " | Total watching: " + user.getMalIds("watching").size());
+                List<Long> newAnime = populateUser(user, Constants.myanimelist.status.completed, userProfile.getStatistics().getAnime(), hook);
+                newAnime.addAll(populateUser(user, Constants.myanimelist.status.watching, userProfile.getStatistics().getAnime(), hook));
+                newAnime.addAll(populateUser(user, Constants.myanimelist.status.on_hold, userProfile.getStatistics().getAnime(), hook));
+                newAnime.addAll(populateUser(user, Constants.myanimelist.status.dropped, userProfile.getStatistics().getAnime(), hook));
+                logger.info(user.getUsername() +
+                        " | Total completed: " + user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.completed)).size() +
+                        " | Total watching: " + user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.watching)).size() +
+                        " | Total on hold: " + user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.on_hold)).size() +
+                        " | Total dropped: " + user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.dropped)).size());
 
                 hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, String.format("Gathering songs for new anime entries (%s/%s)...", 0, newAnime.size()))).build()).queue();
                 populateAnimeThemes(user, newAnime, hook);
@@ -291,18 +296,18 @@ public class GuildSession {
     }
 
     // returns a list of malIds that are not yet populated in the animeBank with theme songs
-    private List<Long> populateUser(IwaUser user, String status, JikanAnimeStats expectedStats, InteractionHook hook) {
+    private List<Long> populateUser(IwaUser user, Constants.myanimelist.status status, JikanAnimeStats expectedStats, InteractionHook hook) {
         int offset = 0;
         List<Long> newAnime = new ArrayList<>();
         MALListResponse paginatedResponse;
         do {
-            paginatedResponse = MAL.getList(user.getUsername(), status, offset).getBody();
+            paginatedResponse = MAL.getList(user.getUsername(), status.toString(), offset).getBody();
             for (MALNode node : paginatedResponse.getData()) {
                 if (!jukebox.getAnimeBank().containsKey(node.getNode().getId())) {
                     jukebox.getAnimeBank().put(node.getNode().getId(), new IwaAnime(node.getNode()));
                     newAnime.add(node.getNode().getId());
                 }
-                user.addMalIds(status, node.getNode().getId());
+                user.addMalIds(status, new AbstractMap.SimpleEntry<>(node.getNode().getId(), node.getStatus().isRewatching() ? node.getNode().getNumEpisodes() : node.getStatus().getLastWatchedEpisode()));
             }
             hook.editOriginal(new MessageEditBuilder().setEmbeds(Embeds.UserAddPending(user, "Populating anime list...", expectedStats)).build()).queue();
             offset += ConfigHandler.config().getMal().getPageLimit();
@@ -332,10 +337,12 @@ public class GuildSession {
                                         .replace(Constants.animethemes.ANIME_SLUG, anime.getSlug())
                                         .replace(Constants.animethemes.ANIMETHEME_SLUG, animeTheme.getSlug())
                                         .replace(Constants.animethemes.VIDEO_TAGS, (video.getTags() == null || video.getTags().isBlank()) ? "" : ("-" + video.getTags()));
-                                IwaTheme theme = new IwaTheme(video.getId(), animeTheme.getSong().getTitle(), artists, video.getAudio().getLink(), videoUrl, malId);
+//                                logger.info("constructing theme for " + animeThemeEntry);
+                                String episodesString = (animeThemeEntry.getEpisodes() == null || animeThemeEntry.getEpisodes().isBlank()) ? "1" : animeThemeEntry.getEpisodes();
+                                        IwaTheme theme = new IwaTheme(video.getId(), animeTheme.getSong().getTitle(), artists, video.getAudio().getLink(), videoUrl, malId, episodesString);
                                 if (jukebox.getAnimeBank().containsKey(malId)) {
                                     jukebox.getThemeBank().putIfAbsent(theme.getId(), theme);
-                                    jukebox.getAnimeBank().get(malId).addThemes(theme.getId());
+                                    jukebox.getAnimeBank().get(malId).addThemes(new AbstractMap.SimpleEntry<>(theme.getId(), theme.getEpisodeList().getMinPoint()));
                                 } else {
                                     logger.error("could not find entry for " + malId + " (" + anime.getName() + ")");
                                 }

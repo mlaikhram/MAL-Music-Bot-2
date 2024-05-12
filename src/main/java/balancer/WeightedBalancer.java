@@ -35,26 +35,27 @@ public class WeightedBalancer extends Balancer {
         }
 
 
-        List<Long> themeList = users.stream().map(user -> Stream.concat(
-                    user.getMalIds(Constants.myanimelist.status.completed.toString()).stream(),
-                    user.getMalIds(Constants.myanimelist.status.watching.toString()).stream()
-                ).filter(id -> filter.isValidAnime(id))
-                .map(id -> animeBank.get(id).getThemeSet().stream()
-                        .filter(themeId -> filter.isValidTheme(themeId)).collect(Collectors.toSet()))
-                .flatMap(Set::stream)
-                .toList())
+        List<Long> themeList = users.stream()
+                .map(user -> user.getMalIdsByStatus(filter.getAllowedStatuses()).stream()
+                        .filter(id -> filter.isValidAnime(id))
+                        .map(id -> animeBank.get(id).getThemeSet().entrySet().stream()
+                                .filter(themeIdEntry -> themeIdEntry.getValue() <= user.getCurrentEpisodeNum(id))
+                                .map(Map.Entry::getKey)
+                                .filter(themeId -> filter.isValidTheme(themeId)).collect(Collectors.toSet()))
+                        .flatMap(Set::stream)
+                        .toList())
                 .flatMap(List::stream)
                 .toList();
 
 
-        if (themeList.size() == 0) {
+        if (themeList.isEmpty()) {
             throw new Exception("Could not find any songs matching your filters! Try adjusting them or adding more users.");
         }
         else {
             this.validSongCount = themeList.size();
             List<Long> blackListAppliedThemeList = themeList.stream().filter(id -> !themeBlackList.contains(id)).collect(Collectors.toList());
 
-            if (blackListAppliedThemeList.size() == 0) {
+            if (blackListAppliedThemeList.isEmpty()) {
                 logger.warn("All valid songs are blacklisted, clearing blacklist and returning a song.");
                 themeBlackList.clear();
                 blackListAppliedThemeList = themeList;

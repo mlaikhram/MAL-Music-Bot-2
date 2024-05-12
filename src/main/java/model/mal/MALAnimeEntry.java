@@ -17,6 +17,9 @@ public class MALAnimeEntry {
     @JsonAlias("media_type")
     private Constants.myanimelist.type type;
 
+    @JsonAlias("num_episodes")
+    private int numEpisodes;
+
     public long getId() {
         return id;
     }
@@ -57,14 +60,23 @@ public class MALAnimeEntry {
         this.type = type;
     }
 
+    public int getNumEpisodes() {
+        return numEpisodes;
+    }
+
+    public void setNumEpisodes(int numEpisodes) {
+        this.numEpisodes = numEpisodes;
+    }
+
     @Override
     public String toString() {
-        return "AnimeEntry{" +
+        return "MALAnimeEntry{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", altTitles=" + altTitles +
                 ", picture=" + picture +
-                ", type='" + type + '\'' +
+                ", type=" + type +
+                ", numEpisodes=" + numEpisodes +
                 '}';
     }
 }

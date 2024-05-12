@@ -1,9 +1,14 @@
 package model.jikan;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 public class JikanAnimeStats {
 
     private int watching;
     private int completed;
+    @JsonAlias("on_hold")
+    private int onHold;
+    private int dropped;
 
     public int getWatching() {
         return watching;
@@ -23,9 +28,28 @@ public class JikanAnimeStats {
 
     @Override
     public String toString() {
-        return "JKAnimeStats{" +
+        return "JikanAnimeStats{" +
                 "watching=" + watching +
                 ", completed=" + completed +
+                ", onHold=" + onHold +
+                ", dropped=" + dropped +
                 '}';
     }
+
+    public int getOnHold() {
+        return onHold;
+    }
+
+    public void setOnHold(int onHold) {
+        this.onHold = onHold;
+    }
+
+    public int getDropped() {
+        return dropped;
+    }
+
+    public void setDropped(int dropped) {
+        this.dropped = dropped;
+    }
+
 }

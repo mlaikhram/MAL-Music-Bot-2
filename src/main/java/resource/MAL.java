@@ -18,7 +18,7 @@ public class MAL {
 
     // MAL API currently does not support fetching public user profiles for some reason -_-
     private static final String USER_ENDPOINT = "/users/{user}?fields=id,name,picture,anime_statistics(num_items_watching,num_items_completed)&nsfw=true";
-    private static final String LIST_ENDPOINT = "/users/{user}/animelist?status={status}&limit={pageLimit}&fields=node(id,title,main_picture,alternative_titles,media_type,opening_themes,ending_themes)&nsfw=true&offset={offset}";
+    private static final String LIST_ENDPOINT = "/users/{user}/animelist?status={status}&limit={pageLimit}&fields=node(id,title,main_picture,alternative_titles,media_type,opening_themes,ending_themes),list_status(num_episodes_watched,is_rewatching)&nsfw=true&offset={offset}";
 
     public static ResponseEntity<MALListResponse> getList(String user, String status, int offset) {
 
