@@ -40,7 +40,7 @@ java -jar MAL-Music-Bot-2-1.0-SNAPSHOT.jar
 Once the Bot is running, you can invite it to your Discord Server from the [Discord Developer Portal](https://discord.com/developers/applications) and interact with it from your text channels.
 
 ### Usage
-Tag the bot or type !iwa and send one of the following messages into a text channel to use the bot:
+Type '/' in the your Discord channel and use one of the following commands to interact with the bot:
 
 `/adduser <username>`
 
