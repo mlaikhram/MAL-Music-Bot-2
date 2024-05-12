@@ -35,7 +35,7 @@ public class Main {
             Commands.slash(Constants.commands.REMOVE_USER, "Remove a MyAnimeList user's library from the song list")
                 .addOption(OptionType.STRING, Constants.options.USERNAME, "the MyAnimeList username to remove", true),
             Commands.slash(Constants.commands.LIST_USERS, "List all MyAnimeList users who are currently part of the song list"),
-            Commands.slash(Constants.commands.PLAY, "Play a random anime theme based on the current users and filters"),
+            Commands.slash(Constants.commands.PLAY, "Play a random anime theme based on the current users and settings"),
             Commands.slash(Constants.commands.STOP, "Stop the currently playing anime theme"),
             Commands.slash(Constants.commands.SETTINGS, "Adjust the bot settings")
         ).queue();

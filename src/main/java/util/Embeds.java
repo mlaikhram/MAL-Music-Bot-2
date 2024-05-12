@@ -68,8 +68,10 @@ public class Embeds {
                 .setThumbnail(user.getProfileImageUrl())
                 .addField("Completed", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.completed)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getCompleted())), true)
                 .addField("Watching", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.watching)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getWatching())), true)
+                .addField("\u200B", "\u200B", true)
                 .addField("On Hold", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.on_hold)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getOnHold())), true)
-                .addField("Dropped", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.dropped)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getDropped())), true);
+                .addField("Dropped", user.getMalIdsByStatus(Set.of(Constants.myanimelist.status.dropped)).size() + (expectedStats == null ? "" : ("/" + expectedStats.getDropped())), true)
+                .addField("\u200B", "\u200B", true);
     }
 
     public static MessageEmbed PendingEmbed(String title, String message) {

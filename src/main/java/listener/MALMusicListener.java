@@ -52,8 +52,12 @@ public class MALMusicListener extends ListenerAdapter {
     public void onStringSelectInteraction(StringSelectInteractionEvent event) {
         event.deferEdit().queue();
         switch (event.getComponentId()) {
+            case Constants.componentids.ANIME_STATUSES_DROPDOWN:
+                setStatusFilter(event.getValues(), event);
+                break;
+
             case Constants.componentids.ANIME_TYPES_DROPDOWN:
-                setFilters(event.getValues(), event);
+                setTypeFilter(event.getValues(), event);
                 break;
 
             case Constants.componentids.ANIME_BALANCER_DROPDOWN:
@@ -120,8 +124,12 @@ public class MALMusicListener extends ListenerAdapter {
         SessionManager.getInstance().getSession(event.getGuild()).displayCurrentSettings(event.getHook());
     }
 
-    private void setFilters(Collection<String> allowedTypes, StringSelectInteractionEvent event) {
-        SessionManager.getInstance().getSession(event.getGuild()).setFilters(allowedTypes, event.getHook());
+    private void setStatusFilter(Collection<String> allowedStatuses, StringSelectInteractionEvent event) {
+        SessionManager.getInstance().getSession(event.getGuild()).setStatusFilter(allowedStatuses, event.getHook());
+    }
+
+    private void setTypeFilter(Collection<String> allowedTypes, StringSelectInteractionEvent event) {
+        SessionManager.getInstance().getSession(event.getGuild()).setTypeFilter(allowedTypes, event.getHook());
     }
 
     private void setBalancer(String balancer, StringSelectInteractionEvent event) {

@@ -74,8 +74,13 @@ public class GuildSession {
         displayCurrentSettings(hook);
     }
 
-    public void setFilters(Collection<String> allowedTypes, InteractionHook hook) {
-        jukebox.getFilter().setTypeFilter(allowedTypes.stream().map(type -> Constants.myanimelist.type.valueOf(type)).collect(Collectors.toSet()));
+    public void setStatusFilter(Collection<String> allowedStatuses, InteractionHook hook) {
+        jukebox.getFilter().setStatusFilter(allowedStatuses.stream().map(Constants.myanimelist.status::valueOf).collect(Collectors.toSet()));
+        displayCurrentSettings(hook);
+    }
+
+    public void setTypeFilter(Collection<String> allowedTypes, InteractionHook hook) {
+        jukebox.getFilter().setTypeFilter(allowedTypes.stream().map(Constants.myanimelist.type::valueOf).collect(Collectors.toSet()));
         displayCurrentSettings(hook);
     }
 
@@ -92,12 +97,21 @@ public class GuildSession {
         autoplayMenuBuilder.setMaxValues(1);
         autoplayMenuBuilder.setDefaultValues(autoplay.name());
 
+        StringSelectMenu.Builder animeStatusSelectMenuBuilder = StringSelectMenu.create(Constants.componentids.ANIME_STATUSES_DROPDOWN);
+        for (Constants.myanimelist.status status : Constants.myanimelist.status.values()) {
+            if (status != Constants.myanimelist.status.plan_to_watch) {
+                animeStatusSelectMenuBuilder.addOption(status.label(), status.name());
+            }
+        }
+        animeStatusSelectMenuBuilder.setMaxValues(Constants.myanimelist.status.values().length - 1);
+        animeStatusSelectMenuBuilder.setDefaultValues(jukebox.getFilter().getAllowedStatuses().stream().map(Enum::name).collect(Collectors.toSet()));
+
         StringSelectMenu.Builder animeTypeSelectMenuBuilder = StringSelectMenu.create(Constants.componentids.ANIME_TYPES_DROPDOWN);
         for (Constants.myanimelist.type type : Constants.myanimelist.type.values()) {
-            animeTypeSelectMenuBuilder.addOption(type.name(), type.name());
+            animeTypeSelectMenuBuilder.addOption(type.label(), type.name());
         }
         animeTypeSelectMenuBuilder.setMaxValues(Constants.myanimelist.type.values().length);
-        animeTypeSelectMenuBuilder.setDefaultValues(jukebox.getFilter().getAllowedTypes().stream().map(type -> type.name()).collect(Collectors.toSet()));
+        animeTypeSelectMenuBuilder.setDefaultValues(jukebox.getFilter().getAllowedTypes().stream().map(Enum::name).collect(Collectors.toSet()));
 
         StringSelectMenu.Builder animeBalancerSelectMenuBuilder = StringSelectMenu.create(Constants.componentids.ANIME_BALANCER_DROPDOWN);
         for (Balancers.type type : Balancers.type.values()) {
@@ -108,6 +122,7 @@ public class GuildSession {
 
         hook.editOriginal(MessageEditBuilder.fromCreateData(new MessageCreateBuilder()
                 .addActionRow(autoplayMenuBuilder.build())
+                .addActionRow(animeStatusSelectMenuBuilder.build())
                 .addActionRow(animeTypeSelectMenuBuilder.build())
                 .addActionRow(animeBalancerSelectMenuBuilder.build())
                 .build()

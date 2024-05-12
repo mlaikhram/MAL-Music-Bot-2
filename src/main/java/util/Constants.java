@@ -1,7 +1,5 @@
 package util;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class Constants {
 
     public static class commands {
@@ -14,6 +12,7 @@ public class Constants {
     }
 
     public static class componentids {
+        public static final String ANIME_STATUSES_DROPDOWN = "settings-anime-statuses";
         public static final String ANIME_TYPES_DROPDOWN = "settings-anime-types";
         public static final String ANIME_BALANCER_DROPDOWN = "settings-anime-balancer";
         public static final String AUTOPLAY_SELECTOR = "settings-autoplay";
@@ -30,23 +29,43 @@ public class Constants {
         public static final String ANIME_URL_TEMPLATE = "https://myanimelist.net/anime/" + MAL_ID;
 
         public enum status {
-            completed,
-            watching,
-            on_hold,
-            dropped,
-            plan_to_watch
+            completed("Completed"),
+            watching("Watching"),
+            on_hold("On-Hold"),
+            dropped("Dropped"),
+            plan_to_watch("Plan to Watch");
+
+            private String label;
+
+            status(String label) {
+                this.label = label;
+            }
+
+            public String label() {
+                return label;
+            }
         }
 
         public enum type {
-            tv,
-            movie,
-            special,
-            ova,
-            ona,
-            tv_special,
-            music,
-            pv,
-            unknown
+            tv("TV"),
+            movie("Movie"),
+            special("Special"),
+            ova("OVA"),
+            ona("ONA"),
+            tv_special("TV Special"),
+            music("Music"),
+            pv("PV"),
+            unknown("Unknown");
+
+            private String label;
+
+            type(String label) {
+                this.label = label;
+            }
+
+            public String label() {
+                return label;
+            }
         }
     }
 

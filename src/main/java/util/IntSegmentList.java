@@ -16,6 +16,14 @@ public class IntSegmentList {
         public Point(int value) {
             this(value, true);
         }
+
+        @Override
+        public String toString() {
+            return "Point{" +
+                    "value=" + value +
+                    ", isStartPoint=" + isStartPoint +
+                    '}';
+        }
     }
 
     private final TreeSet<Point> pointList;
@@ -86,5 +94,12 @@ public class IntSegmentList {
 
     public int getMinPoint() {
         return pointList.first().value;
+    }
+
+    @Override
+    public String toString() {
+        return "IntSegmentList{" +
+                "pointList=" + pointList +
+                '}';
     }
 }
